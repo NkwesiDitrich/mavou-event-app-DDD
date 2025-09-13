@@ -49,11 +49,13 @@ interface EventRepositoryInterface
 
     /**
      * Find events by user ID with filters and pagination
+     * UPDATED: Added search parameter
      */
-    public function findByUserIdWithFilters(int $userId, ?string $status = null, int $page = 1, int $perPage = 10): array;
+    public function findByUserIdWithFilters(int $userId, ?string $status = null, ?string $search = null, int $page = 1, int $perPage = 10): array;
 
     /**
      * Count events by user ID with filters
+     * UPDATED: Added search parameter
      */
-    public function countByUserIdWithFilters(int $userId, ?string $status = null): int;
+    public function countByUserIdWithFilters(int $userId, ?string $status = null, ?string $search = null): int;
 }

@@ -15,24 +15,29 @@ class GetEventsCreatedHandler
 
     public function handle(GetEventsCreatedQuery $query): array
     {
-        // Get events created by the user
+        // Get events created by the user with filters
         $events = $this->eventRepository->findByUserIdWithFilters(
             $query->userId,
             $query->status,
+            $query->search, // NEW: Pass search parameter
             $query->page,
             $query->perPage
         );
 
-        // Get total count for pagination
+        // Get total count for pagination (with filters applied)
         $totalCount = $this->eventRepository->countByUserIdWithFilters(
             $query->userId,
-            $query->status
+            $query->status,
+            $query->search // NEW: Pass search parameter
         );
 
         // Enhance events with participant statistics
         $eventsWithStats = [];
+        $filteredEventIds = []; // Track filtered event IDs for statistics
+        
         foreach ($events as $event) {
             $participantStats = $this->registrationRepository->getEventParticipantStats($event->getId());
+            $filteredEventIds[] = $event->getId();
             
             $eventsWithStats[] = [
                 'id' => $event->getId(),
@@ -61,25 +66,29 @@ class GetEventsCreatedHandler
             ];
         }
 
-        // Get overall statistics for all user's events
-        $userEventIds = array_map(fn($event) => $event->getId(), $events);
-        $overallStats = !empty($userEventIds) 
-            ? $this->registrationRepository->getParticipantsStatistics($userEventIds)
+        // FIXED: Get statistics for FILTERED events only (not all user events)
+        $overallStats = !empty($filteredEventIds) 
+            ? $this->registrationRepository->getParticipantsStatistics($filteredEventIds)
             : [
                 'total_participants' => 0,
                 'checked_in' => 0,
                 'not_checked_in' => 0
             ];
 
+        // FIXED: Calculate statistics based on FILTERED events
+        $upcomingCount = count(array_filter($eventsWithStats, fn($e) => $e['is_upcoming']));
+        $pastCount = count(array_filter($eventsWithStats, fn($e) => $e['is_past']));
+        $todayCount = count(array_filter($eventsWithStats, fn($e) => $e['is_today']));
+
         return [
             'events' => $eventsWithStats,
             'total' => $totalCount,
             'statistics' => [
-                'total_events' => $totalCount,
-                'upcoming_events' => count(array_filter($eventsWithStats, fn($e) => $e['is_upcoming'])),
-                'past_events' => count(array_filter($eventsWithStats, fn($e) => $e['is_past'])),
-                'today_events' => count(array_filter($eventsWithStats, fn($e) => $e['is_today'])),
-                'overall_participants' => $overallStats
+                'total_events' => $totalCount, // Total filtered events
+                'upcoming_events' => $upcomingCount, // Upcoming filtered events
+                'past_events' => $pastCount, // Past filtered events
+                'today_events' => $todayCount, // Today filtered events
+                'overall_participants' => $overallStats // Participants from filtered events only
             ],
             'pagination' => [
                 'current_page' => $query->page,

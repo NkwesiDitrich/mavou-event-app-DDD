@@ -704,9 +704,9 @@ class EloquentEventRepository implements EventRepositoryInterface
     }
 
     /**
-     * Find events by user ID with filters and pagination
+     * ENHANCED: Find events by user ID with filters and pagination including search
      */
-    public function findByUserIdWithFilters(int $userId, ?string $status = null, int $page = 1, int $perPage = 10): array
+    public function findByUserIdWithFilters(int $userId, ?string $status = null, ?string $search = null, int $page = 1, int $perPage = 10): array
     {
         try {
             $query = DB::table($this->table)->where("user_id", $userId);
@@ -727,6 +727,16 @@ class EloquentEventRepository implements EventRepositoryInterface
                 }
             }
             
+            // NEW: Apply search filter
+            if ($search && trim($search) !== '') {
+                $searchTerm = '%' . trim($search) . '%';
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'LIKE', $searchTerm)
+                      ->orWhere('description', 'LIKE', $searchTerm)
+                      ->orWhere('location', 'LIKE', $searchTerm);
+                });
+            }
+            
             // Apply pagination
             $offset = ($page - 1) * $perPage;
             $results = $query->orderBy("date", "desc")
@@ -742,9 +752,9 @@ class EloquentEventRepository implements EventRepositoryInterface
     }
 
     /**
-     * Count events by user ID with filters
+     * ENHANCED: Count events by user ID with filters including search
      */
-    public function countByUserIdWithFilters(int $userId, ?string $status = null): int
+    public function countByUserIdWithFilters(int $userId, ?string $status = null, ?string $search = null): int
     {
         try {
             $query = DB::table($this->table)->where("user_id", $userId);
@@ -763,6 +773,16 @@ class EloquentEventRepository implements EventRepositoryInterface
                         $query->where("date", "=", $today);
                         break;
                 }
+            }
+            
+            // NEW: Apply search filter
+            if ($search && trim($search) !== '') {
+                $searchTerm = '%' . trim($search) . '%';
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('title', 'LIKE', $searchTerm)
+                      ->orWhere('description', 'LIKE', $searchTerm)
+                      ->orWhere('location', 'LIKE', $searchTerm);
+                });
             }
             
             return $query->count();

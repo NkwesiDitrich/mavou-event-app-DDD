@@ -144,7 +144,7 @@ class UserManagementController extends Controller
     {
         try {
             $userId = auth()->id();
-            $eventId = $request->get('event_id');
+            $eventId = $request->get('event_id') ? (int) $request->get('event_id') : null;
             $status = $request->get('status');
             $search = $request->get('search'); // NEW: Add search parameter
             $page = (int) $request->get('page', 1);
@@ -161,23 +161,24 @@ class UserManagementController extends Controller
             Log::error('Get event participants error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to load event participants'
+                'message' => 'Failed to load event participants: ' . $e->getMessage()
             ], 500);
         }
     }
 
     /**
-     * NEW: Get Events Created (AJAX endpoint)
+     * ENHANCED: Get Events Created (AJAX endpoint) - NOW with search support
      */
     public function GetEventsCreated(Request $request): JsonResponse
     {
         try {
             $userId = auth()->id();
             $status = $request->get('status');
+            $search = $request->get('search'); // NEW: Add search parameter
             $page = (int) $request->get('page', 1);
             $perPage = (int) $request->get('per_page', 12);
 
-            $query = new GetEventsCreatedQuery($userId, $status, $page, $perPage);
+            $query = new GetEventsCreatedQuery($userId, $status, $search, $page, $perPage);
             $result = $this->getEventsCreatedHandler->handle($query);
 
             return response()->json([
@@ -188,7 +189,7 @@ class UserManagementController extends Controller
             Log::error('Get events created error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to load events created'
+                'message' => 'Failed to load events created: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -201,7 +202,7 @@ class UserManagementController extends Controller
         try {
             $userId = auth()->id();
             
-            $query = new GetEventParticipantsQuery($userId, $eventId, null, null, 1, 100);
+            $query = new GetEventParticipantsQuery($userId, (int) $eventId, null, null, 1, 100);
             $result = $this->getEventParticipantsHandler->handle($query);
 
             return response()->json([
