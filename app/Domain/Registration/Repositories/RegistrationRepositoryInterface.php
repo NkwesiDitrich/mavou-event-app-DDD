@@ -50,4 +50,24 @@ interface RegistrationRepositoryInterface
      * Get participants statistics for multiple events
      */
     public function getParticipantsStatistics(array $eventIds): array;
+
+    /**
+     * NEW: Find participants by event IDs with pagination and filtering
+     */
+    public function findParticipantsByEventIds(
+        array $eventIds,
+        ?int $eventId = null,
+        ?string $status = null,
+        int $page = 1,
+        int $perPage = 10
+    ): array;
+
+    /**
+     * NEW: Count participants by event IDs with filtering
+     */
+    public function countParticipantsByEventIds(
+        array $eventIds,
+        ?int $eventId = null,
+        ?string $status = null
+    ): int;
 }

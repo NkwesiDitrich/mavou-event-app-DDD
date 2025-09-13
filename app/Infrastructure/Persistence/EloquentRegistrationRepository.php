@@ -184,51 +184,6 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
         }
     }
 
-    private function mapToEntity($data): Registration
-    {
-        $registration = new Registration(
-            id: $data->id,
-            date: new RegistrationDate($data->date),
-            name: new ParticipantName($data->name),
-            mobile: new ParticipantMobile($data->mobile),
-            email: $data->email ? new ParticipantEmail($data->email) : null,
-            remark: $data->remark ? new RegistrationRemark($data->remark) : null,
-            eventId: $data->event_id,
-            userId: $data->user_id,
-            checkedIn: (bool) ($data->checked_in ?? false),
-            checkedInAt: $data->checked_in_at ? new \DateTime($data->checked_in_at) : null,
-            createdAt: new \DateTime($data->created_at),
-            updatedAt: new \DateTime($data->updated_at)
-        );
-
-        // Set additional display properties
-        if (isset($data->event_title)) {
-            $registration->setEventTitle($data->event_title);
-        }
-        
-        if (isset($data->participant_user_name)) {
-            $registration->setParticipantUserName($data->participant_user_name);
-        }
-
-        return $registration;
-    }
-
-    private function mapToEntities($results): array
-    {
-        $entities = [];
-        
-        foreach ($results as $data) {
-            try {
-                $entities[] = $this->mapToEntity($data);
-            } catch (\Exception $e) {
-                Log::error('Error mapping registration entity, skipping: ' . $e->getMessage());
-                continue;
-            }
-        }
-        
-        return $entities;
-    }
-
     /**
      * Get participant statistics for a specific event
      */
@@ -291,5 +246,174 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
                 "not_checked_in" => 0
             ];
         }
+    }
+
+    /**
+     * NEW: Find participants by event IDs with pagination and filtering
+     */
+    public function findParticipantsByEventIds(
+        array $eventIds,
+        ?int $eventId = null,
+        ?string $status = null,
+        int $page = 1,
+        int $perPage = 10
+    ): array {
+        try {
+            if (empty($eventIds)) {
+                return [];
+            }
+
+            $query = DB::table('registrations')
+                ->join('events', 'registrations.event_id', '=', 'events.id')
+                ->leftJoin('users', 'registrations.user_id', '=', 'users.id')
+                ->select(
+                    'registrations.id',
+                    'registrations.name',
+                    'registrations.email',
+                    'registrations.mobile',
+                    'registrations.remark',
+                    'registrations.checked_in',
+                    'registrations.checked_in_at',
+                    'registrations.created_at',
+                    'registrations.updated_at',
+                    'events.id as event_id',
+                    'events.title as event_title',
+                    'events.date as event_date',
+                    'events.location as event_location',
+                    'users.firstName as participant_user_name'
+                )
+                ->whereIn('registrations.event_id', $eventIds);
+
+            // Apply event filter if specified
+            if ($eventId) {
+                $query->where('registrations.event_id', $eventId);
+            }
+
+            // Apply status filter if specified
+            if ($status === 'checked_in') {
+                $query->where('registrations.checked_in', 1);
+            } elseif ($status === 'not_checked_in') {
+                $query->where(function($q) {
+                    $q->where('registrations.checked_in', 0)
+                      ->orWhereNull('registrations.checked_in');
+                });
+            }
+
+            // Apply pagination
+            $offset = ($page - 1) * $perPage;
+            $results = $query
+                ->orderBy('registrations.created_at', 'desc')
+                ->offset($offset)
+                ->limit($perPage)
+                ->get();
+
+            // Convert to array format expected by frontend
+            return $results->map(function($participant) {
+                return [
+                    'id' => $participant->id,
+                    'name' => $participant->name,
+                    'email' => $participant->email ?? '',
+                    'mobile' => $participant->mobile ?? '',
+                    'remark' => $participant->remark ?? '',
+                    'checked_in' => (bool) $participant->checked_in,
+                    'checked_in_at' => $participant->checked_in_at,
+                    'created_at' => $participant->created_at,
+                    'updated_at' => $participant->updated_at,
+                    'event_id' => $participant->event_id,
+                    'event_title' => $participant->event_title,
+                    'event_date' => $participant->event_date,
+                    'event_location' => $participant->event_location,
+                    'participant_user_name' => $participant->participant_user_name ?? 'Unknown User'
+                ];
+            })->toArray();
+
+        } catch (\Exception $e) {
+            Log::error('Error finding participants by event IDs: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * NEW: Count participants by event IDs with filtering
+     */
+    public function countParticipantsByEventIds(
+        array $eventIds,
+        ?int $eventId = null,
+        ?string $status = null
+    ): int {
+        try {
+            if (empty($eventIds)) {
+                return 0;
+            }
+
+            $query = DB::table('registrations')
+                ->whereIn('event_id', $eventIds);
+
+            // Apply event filter if specified
+            if ($eventId) {
+                $query->where('event_id', $eventId);
+            }
+
+            // Apply status filter if specified
+            if ($status === 'checked_in') {
+                $query->where('checked_in', 1);
+            } elseif ($status === 'not_checked_in') {
+                $query->where(function($q) {
+                    $q->where('checked_in', 0)
+                      ->orWhereNull('checked_in');
+                });
+            }
+
+            return $query->count();
+
+        } catch (\Exception $e) {
+            Log::error('Error counting participants by event IDs: ' . $e->getMessage());
+            return 0;
+        }
+    }
+
+    private function mapToEntity($data): Registration
+    {
+        $registration = new Registration(
+            id: $data->id,
+            date: new RegistrationDate($data->date),
+            name: new ParticipantName($data->name),
+            mobile: new ParticipantMobile($data->mobile),
+            email: $data->email ? new ParticipantEmail($data->email) : null,
+            remark: $data->remark ? new RegistrationRemark($data->remark) : null,
+            eventId: $data->event_id,
+            userId: $data->user_id,
+            checkedIn: (bool) ($data->checked_in ?? false),
+            checkedInAt: $data->checked_in_at ? new \DateTime($data->checked_in_at) : null,
+            createdAt: new \DateTime($data->created_at),
+            updatedAt: new \DateTime($data->updated_at)
+        );
+
+        // Set additional display properties
+        if (isset($data->event_title)) {
+            $registration->setEventTitle($data->event_title);
+        }
+        
+        if (isset($data->participant_user_name)) {
+            $registration->setParticipantUserName($data->participant_user_name);
+        }
+
+        return $registration;
+    }
+
+    private function mapToEntities($results): array
+    {
+        $entities = [];
+        
+        foreach ($results as $data) {
+            try {
+                $entities[] = $this->mapToEntity($data);
+            } catch (\Exception $e) {
+                Log::error('Error mapping registration entity, skipping: ' . $e->getMessage());
+                continue;
+            }
+        }
+        
+        return $entities;
     }
 }

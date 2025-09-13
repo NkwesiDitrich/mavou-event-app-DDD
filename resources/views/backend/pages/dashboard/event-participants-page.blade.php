@@ -150,19 +150,27 @@
             if (currentEventFilter) params.append('event_id', currentEventFilter);
             if (currentStatusFilter) params.append('status', currentStatusFilter);
 
-            const response = await axios.get(`/user-management/event-participants?${params}`);
+            // Use the correct API endpoint
+            const response = await axios.get(`/user-management/api/event-participants?${params}`);
             
             if (response.data.status === 'success') {
                 const data = response.data.data;
-                updateParticipantsTable(data.participants);
-                updateStatistics(data.statistics);
-                updateEventFilter(data.events);
-                updatePagination(data.pagination, data.total);
+                updateParticipantsTable(data.participants || []);
+                updateStatistics(data.statistics || {});
+                updateEventFilter(data.events || []);
+                updatePagination(data.pagination || {}, data.total || 0);
                 currentPage = page;
+            } else {
+                throw new Error(response.data.message || 'Failed to load participants');
             }
         } catch (error) {
             console.error('Error loading participants:', error);
-            showToast('Error loading participants', 'error');
+            showError('Error loading participants: ' + (error.response?.data?.message || error.message));
+            
+            // Show empty state
+            updateParticipantsTable([]);
+            updateStatistics({});
+            updateEventFilter([]);
         }
     }
 
@@ -188,23 +196,26 @@
                 '<span class="badge bg-warning">Not Checked In</span>';
             
             const checkInButton = participant.checked_in ?
-                `<button class="btn btn-sm btn-outline-warning" onclick="toggleCheckIn(${participant.id})">
+                `<button class="btn btn-sm btn-outline-warning" onclick="toggleCheckIn(${participant.id}, false)">
                     <i class="bi bi-person-dash"></i> Check Out
                 </button>` :
-                `<button class="btn btn-sm btn-outline-success" onclick="toggleCheckIn(${participant.id})">
+                `<button class="btn btn-sm btn-outline-success" onclick="toggleCheckIn(${participant.id}, true)">
                     <i class="bi bi-person-check"></i> Check In
                 </button>`;
 
+            const eventDate = participant.event_date ? new Date(participant.event_date).toLocaleDateString() : 'N/A';
+            const registrationDate = participant.created_at ? new Date(participant.created_at).toLocaleDateString() : 'N/A';
+
             html += `
                 <tr>
-                    <td>${participant.name}</td>
-                    <td>${participant.email}</td>
+                    <td>${participant.name || 'N/A'}</td>
+                    <td>${participant.email || 'N/A'}</td>
                     <td>${participant.mobile || 'N/A'}</td>
                     <td>
-                        <small class="text-muted">${participant.event_title}</small><br>
-                        <small class="text-info">${participant.event_date}</small>
+                        <small class="text-muted">${participant.event_title || 'Unknown Event'}</small><br>
+                        <small class="text-info">${eventDate}</small>
                     </td>
-                    <td>${new Date(participant.created_at).toLocaleDateString()}</td>
+                    <td>${registrationDate}</td>
                     <td>${statusBadge}</td>
                     <td>
                         <div class="btn-group" role="group">
@@ -238,12 +249,14 @@
         // Clear existing options except "All Events"
         select.innerHTML = '<option value="">All Events</option>';
         
-        events.forEach(event => {
-            const option = document.createElement('option');
-            option.value = event.id;
-            option.textContent = `${event.title} (${event.date})`;
-            select.appendChild(option);
-        });
+        if (events && events.length > 0) {
+            events.forEach(event => {
+                const option = document.createElement('option');
+                option.value = event.id;
+                option.textContent = `${event.title} (${event.date})`;
+                select.appendChild(option);
+            });
+        }
         
         // Restore previous selection
         select.value = currentValue;
@@ -253,23 +266,30 @@
         const info = document.getElementById('paginationInfo');
         const controls = document.getElementById('paginationControls');
         
-        const start = ((pagination.current_page - 1) * pagination.per_page) + 1;
-        const end = Math.min(pagination.current_page * pagination.per_page, total);
+        const currentPage = pagination.current_page || 1;
+        const perPage = pagination.per_page || 10;
+        const totalPages = pagination.total_pages || 1;
+        
+        const start = ((currentPage - 1) * perPage) + 1;
+        const end = Math.min(currentPage * perPage, total);
         
         info.textContent = `Showing ${start}-${end} of ${total} participants`;
         
         let html = '';
         
         // Previous button
-        if (pagination.current_page > 1) {
+        if (currentPage > 1) {
             html += `<li class="page-item">
-                <a class="page-link" href="javascript:void(0)" onclick="loadParticipants(${pagination.current_page - 1})">Previous</a>
+                <a class="page-link" href="javascript:void(0)" onclick="loadParticipants(${currentPage - 1})">Previous</a>
             </li>`;
         }
         
-        // Page numbers
-        for (let i = 1; i <= pagination.total_pages; i++) {
-            if (i === pagination.current_page) {
+        // Page numbers (show max 5 pages)
+        const startPage = Math.max(1, currentPage - 2);
+        const endPage = Math.min(totalPages, startPage + 4);
+        
+        for (let i = startPage; i <= endPage; i++) {
+            if (i === currentPage) {
                 html += `<li class="page-item active">
                     <span class="page-link">${i}</span>
                 </li>`;
@@ -283,7 +303,7 @@
         // Next button
         if (pagination.has_more) {
             html += `<li class="page-item">
-                <a class="page-link" href="javascript:void(0)" onclick="loadParticipants(${pagination.current_page + 1})">Next</a>
+                <a class="page-link" href="javascript:void(0)" onclick="loadParticipants(${currentPage + 1})">Next</a>
             </li>`;
         }
         
@@ -302,19 +322,22 @@
         loadParticipants(1);
     }
 
-    async function toggleCheckIn(registrationId) {
+    async function toggleCheckIn(registrationId, checkIn) {
         try {
             const response = await axios.post('/user-management/check-in', {
-                registration_id: registrationId
+                registration_id: registrationId,
+                check_in: checkIn
             });
             
             if (response.data.status === 'success') {
                 showToast(response.data.message, 'success');
                 loadParticipants(currentPage);
+            } else {
+                throw new Error(response.data.message || 'Failed to update check-in status');
             }
         } catch (error) {
             console.error('Error toggling check-in:', error);
-            showToast('Error updating check-in status', 'error');
+            showToast('Error updating check-in status: ' + (error.response?.data?.message || error.message), 'error');
         }
     }
 
@@ -331,10 +354,12 @@
             if (response.data.status === 'success') {
                 showToast(response.data.message, 'success');
                 loadParticipants(currentPage);
+            } else {
+                throw new Error(response.data.message || 'Failed to remove participant');
             }
         } catch (error) {
             console.error('Error removing participant:', error);
-            showToast('Error removing participant', 'error');
+            showToast('Error removing participant: ' + (error.response?.data?.message || error.message), 'error');
         }
     }
 
@@ -351,6 +376,21 @@
             position: "right",
             backgroundColor: type === 'success' ? "#28a745" : type === 'error' ? "#dc3545" : "#17a2b8",
         }).showToast();
+    }
+
+    function showError(message) {
+        const tbody = document.getElementById('participantsTableBody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-4 text-danger">
+                    <i class="bi bi-exclamation-triangle fs-1"></i>
+                    <p class="mt-2">${message}</p>
+                    <button class="btn btn-outline-primary btn-sm" onclick="loadParticipants()">
+                        <i class="bi bi-arrow-clockwise"></i> Retry
+                    </button>
+                </td>
+            </tr>
+        `;
     }
 </script>
 @endsection
