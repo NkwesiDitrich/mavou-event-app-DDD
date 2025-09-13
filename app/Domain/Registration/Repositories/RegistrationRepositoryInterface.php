@@ -47,27 +47,39 @@ interface RegistrationRepositoryInterface
     public function getEventParticipantStats(int $eventId): array;
 
     /**
-     * Get participants statistics for multiple events
+     * Get participants statistics for multiple events (global stats)
      */
     public function getParticipantsStatistics(array $eventIds): array;
 
     /**
-     * NEW: Find participants by event IDs with pagination and filtering
+     * Find participants by event IDs with pagination, filtering, and search
      */
     public function findParticipantsByEventIds(
         array $eventIds,
         ?int $eventId = null,
         ?string $status = null,
+        ?string $search = null,
         int $page = 1,
         int $perPage = 10
     ): array;
 
     /**
-     * NEW: Count participants by event IDs with filtering
+     * Count participants by event IDs with filtering and search
      */
     public function countParticipantsByEventIds(
         array $eventIds,
         ?int $eventId = null,
-        ?string $status = null
+        ?string $status = null,
+        ?string $search = null
     ): int;
+
+    /**
+     * NEW: Get filtered participants statistics (respects all filters including search)
+     */
+    public function getFilteredParticipantsStatistics(
+        array $eventIds,
+        ?int $eventId = null,
+        ?string $status = null,
+        ?string $search = null
+    ): array;
 }

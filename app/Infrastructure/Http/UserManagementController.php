@@ -81,26 +81,24 @@ class UserManagementController extends Controller
             $registrations = $this->getUserRegistrationsHandler->handle($query);
 
             // Convert to array format expected by frontend
-            $data = array_map(function ($registration) {
+            $registrationsArray = array_map(function($registration) {
                 return [
                     'id' => $registration->getId(),
                     'name' => $registration->getName()->getValue(),
-                    'mobile' => $registration->getMobile()->getValue(),
                     'email' => $registration->getEmail() ? $registration->getEmail()->getValue() : '',
+                    'mobile' => $registration->getMobile()->getValue(),
                     'remark' => $registration->getRemark() ? $registration->getRemark()->getValue() : '',
-                    'date' => $registration->getFormattedDate(),
-                    'event_title' => $registration->getEventTitle() ?? 'Unknown Event',
-                    'participant_user_name' => $registration->getParticipantUserName() ?? 'Unknown User',
                     'checked_in' => $registration->isCheckedIn(),
                     'checked_in_at' => $registration->getCheckedInAt() ? $registration->getCheckedInAt()->format('Y-m-d H:i:s') : null,
-                    'check_in_status' => $registration->getCheckInStatus(),
-                    'created_at' => $registration->getFormattedCreatedAt()
+                    'created_at' => $registration->getCreatedAt()->format('Y-m-d H:i:s'),
+                    'event_title' => $registration->getEventTitle() ?? 'Unknown Event',
+                    'participant_user_name' => $registration->getParticipantUserName() ?? 'Unknown User'
                 ];
             }, $registrations);
 
             return response()->json([
                 'status' => 'success',
-                'data' => $data
+                'data' => $registrationsArray
             ]);
         } catch (\Exception $e) {
             Log::error('Registration list error: ' . $e->getMessage());
@@ -112,11 +110,11 @@ class UserManagementController extends Controller
     }
 
     // ========================================
-    // NEW ENHANCED DROPDOWN METHODS
+    // NEW ENHANCED METHODS
     // ========================================
 
     /**
-     * NEW: User Management Dashboard (Main dropdown page)
+     * NEW: User Management Dashboard (Dropdown entry point)
      */
     public function UserManagementDashboard(): View
     {
@@ -140,7 +138,7 @@ class UserManagementController extends Controller
     }
 
     /**
-     * NEW: Get Event Participants (AJAX endpoint)
+     * NEW: Get Event Participants (AJAX endpoint) - UPDATED with search support
      */
     public function GetEventParticipants(Request $request): JsonResponse
     {
@@ -148,10 +146,11 @@ class UserManagementController extends Controller
             $userId = auth()->id();
             $eventId = $request->get('event_id');
             $status = $request->get('status');
+            $search = $request->get('search'); // NEW: Add search parameter
             $page = (int) $request->get('page', 1);
             $perPage = (int) $request->get('per_page', 10);
 
-            $query = new GetEventParticipantsQuery($userId, $eventId, $status, $page, $perPage);
+            $query = new GetEventParticipantsQuery($userId, $eventId, $status, $search, $page, $perPage);
             $result = $this->getEventParticipantsHandler->handle($query);
 
             return response()->json([
@@ -202,7 +201,7 @@ class UserManagementController extends Controller
         try {
             $userId = auth()->id();
             
-            $query = new GetEventParticipantsQuery($userId, $eventId, null, 1, 100);
+            $query = new GetEventParticipantsQuery($userId, $eventId, null, null, 1, 100);
             $result = $this->getEventParticipantsHandler->handle($query);
 
             return response()->json([
@@ -253,20 +252,20 @@ class UserManagementController extends Controller
             } else {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to update check-in status. You may not have permission for this event.'
-                ], 403);
+                    'message' => 'Failed to update participant status'
+                ], 400);
             }
         } catch (\Exception $e) {
             Log::error('Check-in participant error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while updating check-in status'
+                'message' => 'Failed to update participant status'
             ], 500);
         }
     }
 
     /**
-     * Unattend a participant (EXISTING - Keep this)
+     * Remove a participant (unattend) (EXISTING - Keep this)
      */
     public function UnattendParticipant(Request $request): JsonResponse
     {
@@ -287,72 +286,45 @@ class UserManagementController extends Controller
             if ($success) {
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Participant registration successfully removed'
+                    'message' => 'Participant successfully removed'
                 ]);
             } else {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Failed to remove registration. You may not have permission for this event.'
-                ], 403);
+                    'message' => 'Failed to remove participant'
+                ], 400);
             }
         } catch (\Exception $e) {
             Log::error('Unattend participant error: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'An error occurred while removing registration'
+                'message' => 'Failed to remove participant'
             ], 500);
         }
     }
 
+    // ========================================
+    // HELPER METHODS (Keep as they are)
+    // ========================================
+
     /**
-     * Get events in format compatible with view expectations (EXISTING - Keep this)
+     * Get events in a format compatible with the view
      */
-    private function getViewCompatibleEvents($userId)
+    private function getViewCompatibleEvents(int $userId)
     {
         try {
-            // Use direct database query for maximum performance and view compatibility
-            $events = \Illuminate\Support\Facades\DB::table('events')
-                ->join('categories', 'events.categorie_id', '=', 'categories.id')
-                ->select(
-                    'events.id',
-                    'events.title',
-                    'events.description',
-                    'events.date',
-                    'events.time',
-                    'events.location',
-                    'events.type',
-                    'events.image',
-                    'events.user_id',
-                    'events.categorie_id',
-                    'events.created_at',
-                    'events.updated_at',
-                    'categories.name as category_name'
-                )
-                ->where('events.user_id', $userId)
-                ->orderBy('events.date', 'desc')
-                ->get();
-
-            // Convert to simple objects that the view can access directly
-            return $events->map(function ($event) {
+            $events = $this->eventRepository->findByUserId($userId);
+            
+            return collect($events)->map(function($event) {
                 return (object) [
-                    'id' => $event->id,
-                    'title' => $event->title,
-                    'description' => $event->description,
-                    'date' => $event->date,
-                    'time' => $event->time,
-                    'location' => $event->location,
-                    'type' => $event->type,
-                    'image' => $event->image,
-                    'user_id' => $event->user_id,
-                    'categorie_id' => $event->categorie_id,
-                    'category_name' => $event->category_name,
-                    'created_at' => $event->created_at,
-                    'updated_at' => $event->updated_at
+                    'id' => $event->getId(),
+                    'title' => $event->getTitle()->getValue(),
+                    'date' => $event->getDate()->getFormattedDate(),
+                    'location' => $event->getLocation()->getValue()
                 ];
             });
-
         } catch (\Exception $e) {
-            Log::error('Get view compatible events failed: ' . $e->getMessage());
+            Log::error('Error getting view compatible events: ' . $e->getMessage());
             return collect([]);
         }
     }

@@ -32,24 +32,31 @@ class GetEventParticipantsHandler
             ];
         }
 
-        // Get participants for user's events only
+        // Get participants for user's events only with search
         $participants = $this->registrationRepository->findParticipantsByEventIds(
             $userEventIds,
             $query->eventId,
             $query->status,
+            $query->search,
             $query->page,
             $query->perPage
         );
 
-        // Get total count for pagination
+        // Get total count for pagination with same filters
         $totalCount = $this->registrationRepository->countParticipantsByEventIds(
             $userEventIds,
             $query->eventId,
-            $query->status
+            $query->status,
+            $query->search
         );
 
-        // Get statistics
-        $statistics = $this->registrationRepository->getParticipantsStatistics($userEventIds);
+        // Get statistics with same filters applied (this is the key fix!)
+        $statistics = $this->registrationRepository->getFilteredParticipantsStatistics(
+            $userEventIds,
+            $query->eventId,
+            $query->status,
+            $query->search
+        );
 
         // Format events for dropdown
         $eventsForDropdown = array_map(function($event) {

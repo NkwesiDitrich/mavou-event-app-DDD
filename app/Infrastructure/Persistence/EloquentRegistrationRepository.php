@@ -213,7 +213,7 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
     }
 
     /**
-     * Get participants statistics for multiple events
+     * Get participants statistics for multiple events (global stats - no filters)
      */
     public function getParticipantsStatistics(array $eventIds): array
     {
@@ -249,12 +249,13 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
     }
 
     /**
-     * NEW: Find participants by event IDs with pagination and filtering
+     * Find participants by event IDs with pagination, filtering, and search
      */
     public function findParticipantsByEventIds(
         array $eventIds,
         ?int $eventId = null,
         ?string $status = null,
+        ?string $search = null,
         int $page = 1,
         int $perPage = 10
     ): array {
@@ -299,6 +300,16 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
                 });
             }
 
+            // Apply search filter if specified
+            if ($search && trim($search) !== '') {
+                $searchTerm = '%' . trim($search) . '%';
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('registrations.name', 'LIKE', $searchTerm)
+                      ->orWhere('registrations.email', 'LIKE', $searchTerm)
+                      ->orWhere('events.title', 'LIKE', $searchTerm);
+                });
+            }
+
             // Apply pagination
             $offset = ($page - 1) * $perPage;
             $results = $query
@@ -334,12 +345,13 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
     }
 
     /**
-     * NEW: Count participants by event IDs with filtering
+     * Count participants by event IDs with filtering and search
      */
     public function countParticipantsByEventIds(
         array $eventIds,
         ?int $eventId = null,
-        ?string $status = null
+        ?string $status = null,
+        ?string $search = null
     ): int {
         try {
             if (empty($eventIds)) {
@@ -347,20 +359,31 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
             }
 
             $query = DB::table('registrations')
-                ->whereIn('event_id', $eventIds);
+                ->join('events', 'registrations.event_id', '=', 'events.id')
+                ->whereIn('registrations.event_id', $eventIds);
 
             // Apply event filter if specified
             if ($eventId) {
-                $query->where('event_id', $eventId);
+                $query->where('registrations.event_id', $eventId);
             }
 
             // Apply status filter if specified
             if ($status === 'checked_in') {
-                $query->where('checked_in', 1);
+                $query->where('registrations.checked_in', 1);
             } elseif ($status === 'not_checked_in') {
                 $query->where(function($q) {
-                    $q->where('checked_in', 0)
-                      ->orWhereNull('checked_in');
+                    $q->where('registrations.checked_in', 0)
+                      ->orWhereNull('registrations.checked_in');
+                });
+            }
+
+            // Apply search filter if specified
+            if ($search && trim($search) !== '') {
+                $searchTerm = '%' . trim($search) . '%';
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('registrations.name', 'LIKE', $searchTerm)
+                      ->orWhere('registrations.email', 'LIKE', $searchTerm)
+                      ->orWhere('events.title', 'LIKE', $searchTerm);
                 });
             }
 
@@ -369,6 +392,67 @@ class EloquentRegistrationRepository implements RegistrationRepositoryInterface
         } catch (\Exception $e) {
             Log::error('Error counting participants by event IDs: ' . $e->getMessage());
             return 0;
+        }
+    }
+
+    /**
+     * NEW: Get filtered participants statistics (respects all filters including search)
+     * This is the key method that makes statistics follow the filters!
+     */
+    public function getFilteredParticipantsStatistics(
+        array $eventIds,
+        ?int $eventId = null,
+        ?string $status = null,
+        ?string $search = null
+    ): array {
+        try {
+            if (empty($eventIds)) {
+                return [
+                    "total_participants" => 0,
+                    "checked_in" => 0,
+                    "not_checked_in" => 0
+                ];
+            }
+
+            $query = DB::table('registrations')
+                ->join('events', 'registrations.event_id', '=', 'events.id')
+                ->whereIn('registrations.event_id', $eventIds);
+
+            // Apply event filter if specified
+            if ($eventId) {
+                $query->where('registrations.event_id', $eventId);
+            }
+
+            // Apply search filter if specified (but NOT status filter for statistics)
+            if ($search && trim($search) !== '') {
+                $searchTerm = '%' . trim($search) . '%';
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('registrations.name', 'LIKE', $searchTerm)
+                      ->orWhere('registrations.email', 'LIKE', $searchTerm)
+                      ->orWhere('events.title', 'LIKE', $searchTerm);
+                });
+            }
+
+            // Get statistics for the filtered results
+            $stats = $query
+                ->selectRaw("COUNT(*) as total_participants")
+                ->selectRaw("SUM(CASE WHEN registrations.checked_in = 1 THEN 1 ELSE 0 END) as checked_in")
+                ->selectRaw("SUM(CASE WHEN registrations.checked_in = 0 OR registrations.checked_in IS NULL THEN 1 ELSE 0 END) as not_checked_in")
+                ->first();
+            
+            return [
+                "total_participants" => (int) ($stats->total_participants ?? 0),
+                "checked_in" => (int) ($stats->checked_in ?? 0),
+                "not_checked_in" => (int) ($stats->not_checked_in ?? 0)
+            ];
+
+        } catch (\Exception $e) {
+            Log::error("Error getting filtered participants statistics: " . $e->getMessage());
+            return [
+                "total_participants" => 0,
+                "checked_in" => 0,
+                "not_checked_in" => 0
+            ];
         }
     }
 
