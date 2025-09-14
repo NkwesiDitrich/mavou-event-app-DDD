@@ -308,7 +308,7 @@
             html += `
                 <div class="col-md-4 col-sm-6 mb-4">
                     <div class="card h-100 shadow-sm">
-                        ${event.image ? `<img src="/uploads/${event.image}" class="card-img-top" style="height: 200px; object-fit: cover;">` : ''}
+                        ${event.image ? `<img src="{{ asset("uploads") }}/${event.image}" class="card-img-top" style="height: 200px; object-fit: cover;">` : ''}
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-2">
                                 <h5 class="card-title">${highlightedTitle}</h5>

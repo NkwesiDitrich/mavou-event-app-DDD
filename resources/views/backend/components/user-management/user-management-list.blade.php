@@ -94,9 +94,6 @@
                                 <tr data-registration-id="{{ $registration->getId() }}">
                                     <td>
                                         <strong>{{ $registration->getName()->getValue() }}</strong>
-                                        @if($registration->getParticipantUserName())
-                                            <br><small class="text-muted">User: {{ $registration->getParticipantUserName() }}</small>
-                                        @endif
                                     </td>
                                     <td>{{ $registration->getMobile()->getValue() }}</td>
                                     <td>{{ $registration->getEmail() ? $registration->getEmail()->getValue() : 'N/A' }}</td>
@@ -119,28 +116,15 @@
                                         @endif
                                     </td>
                                     <td>
-                                        <div class="btn-group" role="group">
-                                            @if($registration->isCheckedIn())
-                                                <button class="btn btn-sm btn-outline-warning check-out-btn" 
-                                                        data-registration-id="{{ $registration->getId() }}"
-                                                        title="Check Out">
-                                                    <i class="bi bi-box-arrow-right"></i> Check Out
-                                                </button>
-                                            @else
-                                                <button class="btn btn-sm btn-success check-in-btn" 
-                                                        data-registration-id="{{ $registration->getId() }}"
-                                                        title="Check In">
-                                                    <i class="bi bi-check-circle"></i> Check In
-                                                </button>
-                                            @endif
-                                            
-                                            <button class="btn btn-sm btn-danger unattend-btn" 
-                                                    data-registration-id="{{ $registration->getId() }}"
-                                                    data-participant-name="{{ $registration->getName()->getValue() }}"
-                                                    title="Remove Registration">
-                                                <i class="bi bi-person-x"></i> Unattend
-                                            </button>
-                                        </div>
+                                        <button class="btn btn-sm btn-primary view-user-btn" 
+                                                data-registration-id="{{ $registration->getId() }}"
+                                                data-participant-name="{{ $registration->getName()->getValue() }}"
+                                                data-participant-email="{{ $registration->getEmail() ? $registration->getEmail()->getValue() : 'N/A' }}"
+                                                data-participant-mobile="{{ $registration->getMobile()->getValue() }}"
+                                                data-participant-username="{{ $registration->getParticipantUserName() ?? 'N/A' }}"
+                                                title="View User Details">
+                                            <i class="bi bi-eye"></i> View
+                                        </button>
                                     </td>
                                 </tr>
                             @empty
@@ -154,6 +138,26 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div class="modal fade" id="userDetailsModal" tabindex="-1" aria-labelledby="userDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="userDetailsModalLabel">User Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="userDetailsContent">
+                    <!-- User details will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -190,100 +194,201 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.reload();
     });
 
-    // Check-in button handlers
+    // View user button handlers
     document.addEventListener('click', function(e) {
-        if (e.target.closest('.check-in-btn')) {
-            const btn = e.target.closest('.check-in-btn');
-            const registrationId = btn.dataset.registrationId;
-            handleCheckIn(registrationId, true);
-        }
-        
-        if (e.target.closest('.check-out-btn')) {
-            const btn = e.target.closest('.check-out-btn');
-            const registrationId = btn.dataset.registrationId;
-            handleCheckIn(registrationId, false);
-        }
-        
-        if (e.target.closest('.unattend-btn')) {
-            const btn = e.target.closest('.unattend-btn');
+        if (e.target.closest('.view-user-btn')) {
+            const btn = e.target.closest('.view-user-btn');
             const registrationId = btn.dataset.registrationId;
             const participantName = btn.dataset.participantName;
-            handleUnattend(registrationId, participantName);
+            const participantEmail = btn.dataset.participantEmail;
+            const participantMobile = btn.dataset.participantMobile;
+            const participantUsername = btn.dataset.participantUsername;
+            
+            showUserDetails({
+                registrationId: registrationId,
+                name: participantName,
+                email: participantEmail,
+                mobile: participantMobile,
+                username: participantUsername
+            });
         }
     });
 
-    function handleCheckIn(registrationId, checkIn) {
-        showLoading();
+    function showUserDetails(userData) {
+        // Set modal title
+        document.getElementById('userDetailsModalLabel').textContent = `User Details - ${userData.name}`;
         
-        fetch('/user-management/check-in', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                registration_id: registrationId,
-                check_in: checkIn
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
-            
-            if (data.status === 'success') {
-                showToast('Success', data.message, 'success');
-                // Refresh the page to update the UI
-                setTimeout(() => window.location.reload(), 1000);
-            } else {
-                showToast('Error', data.message, 'error');
-            }
-        })
-        .catch(error => {
-            hideLoading();
-            console.error('Error:', error);
-            showToast('Error', 'An error occurred while updating check-in status', 'error');
-        });
+        // Show loading state
+        document.getElementById('userDetailsContent').innerHTML = `
+            <div class="text-center py-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading user details...</p>
+            </div>
+        `;
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('userDetailsModal'));
+        modal.show();
+        
+        // Load user events
+        loadUserEvents(userData);
     }
 
-    function handleUnattend(registrationId, participantName) {
-        if (!confirm(`Are you sure you want to remove ${participantName}'s registration? This action cannot be undone.`)) {
-            return;
-        }
-        
-        showLoading();
-        
-        fetch('/user-management/unattend', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            },
-            body: JSON.stringify({
-                registration_id: registrationId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hideLoading();
+    async function loadUserEvents(userData) {
+        try {
+            // Get all registrations for this user (by email or name)
+            const response = await fetch('/user-management/registrations?' + new URLSearchParams({
+                search_user: userData.email || userData.name
+            }), {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                }
+            });
+            
+            const data = await response.json();
             
             if (data.status === 'success') {
-                showToast('Success', data.message, 'success');
-                // Remove the row from the table
-                const row = document.querySelector(`tr[data-registration-id="${registrationId}"]`);
-                if (row) {
-                    row.remove();
-                }
-                // Update statistics
-                updateStatistics();
+                displayUserDetails(userData, data.data || []);
             } else {
-                showToast('Error', data.message, 'error');
+                throw new Error(data.message || 'Failed to load user events');
             }
-        })
-        .catch(error => {
-            hideLoading();
-            console.error('Error:', error);
-            showToast('Error', 'An error occurred while removing registration', 'error');
-        });
+        } catch (error) {
+            console.error('Error loading user events:', error);
+            displayUserDetails(userData, []);
+        }
+    }
+
+    function displayUserDetails(userData, userRegistrations) {
+        const content = document.getElementById('userDetailsContent');
+        
+        // Filter registrations for this specific user
+        const filteredRegistrations = userRegistrations.filter(reg => 
+            reg.email === userData.email || reg.name === userData.name
+        );
+        
+        let html = `
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-person"></i> User Information</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td><strong>Name:</strong></td>
+                                    <td>${userData.name}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Email:</strong></td>
+                                    <td>${userData.email}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Mobile:</strong></td>
+                                    <td>${userData.mobile}</td>
+                                </tr>
+                                ${userData.username !== 'N/A' ? `
+                                <tr>
+                                    <td><strong>Username:</strong></td>
+                                    <td>${userData.username}</td>
+                                </tr>
+                                ` : ''}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-graph-up"></i> Registration Statistics</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-6">
+                                    <div class="border-end">
+                                        <h4 class="text-primary">${filteredRegistrations.length}</h4>
+                                        <small class="text-muted">Total Events</small>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <h4 class="text-success">${filteredRegistrations.filter(reg => reg.checked_in).length}</h4>
+                                    <small class="text-muted">Checked In</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="bi bi-calendar-event"></i> Registered Events</h6>
+                        </div>
+                        <div class="card-body">
+        `;
+        
+        if (filteredRegistrations.length === 0) {
+            html += `
+                <div class="text-center py-4 text-muted">
+                    <i class="bi bi-calendar-x fs-1"></i>
+                    <p class="mt-2">No event registrations found for this user</p>
+                </div>
+            `;
+        } else {
+            html += `
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Registration Date</th>
+                                <th>Status</th>
+                                <th>Check-in Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            filteredRegistrations.forEach(registration => {
+                const statusBadge = registration.checked_in ? 
+                    '<span class="badge bg-success">Checked In</span>' : 
+                    '<span class="badge bg-warning">Not Checked In</span>';
+                
+                const checkinDate = registration.checked_in_at ? 
+                    new Date(registration.checked_in_at).toLocaleDateString() : 
+                    'N/A';
+                
+                html += `
+                    <tr>
+                        <td>
+                            <strong>${registration.event_title || 'Unknown Event'}</strong>
+                        </td>
+                        <td>${new Date(registration.created_at).toLocaleDateString()}</td>
+                        <td>${statusBadge}</td>
+                        <td>${checkinDate}</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+        
+        html += `
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        content.innerHTML = html;
     }
 
     function showLoading() {
