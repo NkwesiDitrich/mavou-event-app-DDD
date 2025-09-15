@@ -7,6 +7,7 @@ use App\Models\Registration;
 use App\Models\User;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Http\Requests\EventRegistrationRequest;
 use App\Application\Queries\GetUserEventsQuery;
 use App\Application\Handlers\GetUserEventsHandler;
 use App\Infrastructure\Persistence\EloquentEventRepository;
@@ -125,29 +126,21 @@ class HomeController extends Controller
         }
     }
     
-    function EventRegistration(Request $request)
+    function EventRegistration(EventRegistrationRequest $request)
     {
         try {
-            // ENHANCED: Validate email uniqueness for the specific event
-            $email = $request->input('email');
-            $eventId = $request->input('event_id');
+            // The validation is now handled by EventRegistrationRequest
+            // which includes the Rule::unique('registrations')->where('event_id', $eventId) validation
             
-            // Check if email is provided and if it already exists for this event
-            if (!empty($email) && $this->isEmailAlreadyRegistered($email, $eventId)) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', 'This email has already been used, please use another email');
-            }
-
-            // Proceed with registration if email is unique for this event
+            // Create the registration - validation has already passed
             Registration::create([
                 'date' => now()->toDateString(),
-                'name' => $request->input('name'),
-                'mobile' => $request->input('mobile'),
-                'email' => $email,
-                'remark' => $request->input('remark'),
-                'event_id' => $eventId,
-                'user_id' => $request->input('user_id')
+                'name' => $request->validated()['name'],
+                'mobile' => $request->validated()['mobile'],
+                'email' => $request->validated()['email'],
+                'remark' => $request->validated()['remark'],
+                'event_id' => $request->validated()['event_id'],
+                'user_id' => $request->validated()['user_id']
             ]);
 
             return redirect()->back()->with('success', 'Your Registration Confirmed Successfully!');

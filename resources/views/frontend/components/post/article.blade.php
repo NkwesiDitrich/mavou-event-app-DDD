@@ -129,28 +129,62 @@
 				</button>
 			</div>
 			<div class="modal-body">
+				<!-- Display validation errors -->
+				@if ($errors->any())
+					<div class="alert alert-danger">
+						<ul style="margin-bottom: 0;">
+							@foreach ($errors->all() as $error)
+								<li>{{ $error }}</li>
+							@endforeach
+						</ul>
+					</div>
+				@endif
+				
+				<!-- Display general error message -->
+				@if (\Session::has('error'))
+					<div class="alert alert-danger">
+						{{ \Session::get('error') }}
+					</div>
+				@endif
+				
 				<form action="{{ url('/event-registration') }}" method="POST">
 					@csrf
 					<div class="form-group">
 						<label class="form-label" for="name">Full Name *</label>
-						<input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" required/>
+						<input type="text" id="name" name="name" class="form-control @error('name') is-invalid @enderror" 
+							   placeholder="Enter your full name" value="{{ old('name') }}" required/>
 						<input type="hidden" id="event_id" name="event_id" value="{{ $post->getId() }}"/>
 						<input type="hidden" id="user_id" name="user_id" value="{{ $post->getUserId() }}"/>
+						@error('name')
+							<div class="invalid-feedback">{{ $message }}</div>
+						@enderror
 					</div>
 					
 					<div class="form-group">
 						<label class="form-label" for="mobile">Mobile Number</label>
-						<input type="text" id="mobile" name="mobile" class="form-control" placeholder="Enter your mobile number" />
+						<input type="text" id="mobile" name="mobile" class="form-control @error('mobile') is-invalid @enderror" 
+							   placeholder="Enter your mobile number" value="{{ old('mobile') }}" />
+						@error('mobile')
+							<div class="invalid-feedback">{{ $message }}</div>
+						@enderror
 					</div>
 					
 					<div class="form-group">
 						<label class="form-label" for="email">Email Address *</label>
-						<input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required/>
+						<input type="email" id="email" name="email" class="form-control @error('email') is-invalid @enderror" 
+							   placeholder="Enter your email address" value="{{ old('email') }}" required/>
+						@error('email')
+							<div class="invalid-feedback">{{ $message }}</div>
+						@enderror
 					</div>
 					
 					<div class="form-group">
 						<label class="form-label" for="remark">Additional Comments</label>
-						<textarea id="remark" name="remark" rows="3" class="form-control" placeholder="Any special requirements or comments..."></textarea>
+						<textarea id="remark" name="remark" rows="3" class="form-control @error('remark') is-invalid @enderror" 
+								  placeholder="Any special requirements or comments...">{{ old('remark') }}</textarea>
+						@error('remark')
+							<div class="invalid-feedback">{{ $message }}</div>
+						@enderror
 					</div>
 					
 					<button type="submit" class="btn btn-primary btn-block">
@@ -194,6 +228,40 @@
 .badge {
     font-size: 12px !important;
     font-weight: 500 !important;
+}
+
+/* Form validation styling */
+.is-invalid {
+    border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.25rem;
+    font-size: 0.875rem;
+    color: #dc3545;
+}
+
+.alert {
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+
+.alert ul {
+    padding-left: 1.2rem;
+}
+
+.alert li {
+    margin-bottom: 0.25rem;
 }
 
 /* Event Registration Section Styling */
