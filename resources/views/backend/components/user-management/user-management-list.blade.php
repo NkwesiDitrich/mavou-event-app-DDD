@@ -175,6 +175,28 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Get CSRF token - FIXED to handle missing meta tag gracefully
+    function getCSRFToken() {
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) {
+            return metaTag.getAttribute('content');
+        }
+        
+        // Fallback: try to get from Laravel's global variable
+        if (typeof window.Laravel !== 'undefined' && window.Laravel.csrfToken) {
+            return window.Laravel.csrfToken;
+        }
+        
+        // Last resort: try to get from any form on the page
+        const csrfInput = document.querySelector('input[name="_token"]');
+        if (csrfInput) {
+            return csrfInput.value;
+        }
+        
+        console.warn('CSRF token not found. Some requests may fail.');
+        return '';
+    }
+
     // Event filter change handler
     document.getElementById('eventFilter').addEventListener('change', function() {
         const eventId = this.value;
@@ -238,15 +260,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadUserEvents(userData) {
         try {
+            const csrfToken = getCSRFToken();
+            const headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            };
+            
+            // Only add CSRF token if we have one
+            if (csrfToken) {
+                headers['X-CSRF-TOKEN'] = csrfToken;
+            }
+            
             // FIXED: Use the correct search parameter that the controller now supports
             const response = await fetch('/user-management/registrations?' + new URLSearchParams({
                 search_user: userData.email !== 'N/A' ? userData.email : userData.name
             }), {
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
+                headers: headers
             });
             
             if (!response.ok) {

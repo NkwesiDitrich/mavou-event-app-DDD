@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Event Management Login</title>
     <link rel="icon" type="image/x-icon" href="{{asset('/favicon.ico')}}" />
     <link href="{{asset('backend/css/bootstrap.css')}}" rel="stylesheet" />
@@ -10,6 +11,7 @@
     <link href="{{asset('backend/css/fontawesome.css')}}" rel="stylesheet" />
     <link href="{{asset('backend/css/style.css')}}" rel="stylesheet" />
     <link href="{{asset('backend/css/toastify.min.css')}}" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     <script src="{{asset('backend/js/toastify-js.js')}}"></script>
     <script src="{{asset('backend/js/axios.min.js')}}"></script>
     <script src="{{asset('backend/js/config.js')}}"></script>
