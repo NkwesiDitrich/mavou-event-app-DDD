@@ -17,6 +17,11 @@
                         <h3 class="event-card-title">
                             <a href="{{ url('/post'.'/'.$recent->getId())}}">{{ $recent->getTitle()->getValue() }}</a>
                         </h3>
+                        @if($recent->hasTeaser())
+                            <div class="event-card-teaser">
+                                {{ $recent->getTeaser()->getValue() }}
+                            </div>
+                        @endif
                         <div class="event-card-info">
                             <div class="event-info-item">
                                 <i class="fa fa-calendar"></i>

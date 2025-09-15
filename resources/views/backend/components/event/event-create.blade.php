@@ -45,6 +45,11 @@
                                 <input type="text" class="form-control" id="eventLocation" placeholder="Location">
                             </div>
                             <div class="col-12 p-1">
+                                <label class="form-label">Teaser <small class="text-muted">(10-20 words, 1-2 lines)</small></label>
+                                <textarea type="text" class="form-control" id="eventTeaser" placeholder="Enter a short teaser for your event (10-20 words)" rows="2" maxlength="255"></textarea>
+                                <small class="text-muted">Word count: <span id="teaserWordCount">0</span></small>
+                            </div>
+                            <div class="col-12 p-1">
                                 <label class="form-label">Description </label>
                                 <textarea type="text" class="form-control" id="eventDescription" placeholder="Description"></textarea>
                             </div>
@@ -74,6 +79,23 @@
 <script>
     FillCategoryDropDown();
 
+    // Add word count functionality for teaser
+    document.getElementById('eventTeaser').addEventListener('input', function() {
+        const text = this.value.trim();
+        const wordCount = text === '' ? 0 : text.split(/\s+/).length;
+        document.getElementById('teaserWordCount').textContent = wordCount;
+        
+        // Optional: Add visual feedback for word count
+        const countElement = document.getElementById('teaserWordCount');
+        if (wordCount >= 10 && wordCount <= 20) {
+            countElement.style.color = 'green';
+        } else if (wordCount > 20) {
+            countElement.style.color = 'red';
+        } else {
+            countElement.style.color = 'orange';
+        }
+    });
+
 async function FillCategoryDropDown(){
     let res = await axios.get("/list-category")
     res.data.forEach(function (item,i) {
@@ -91,6 +113,7 @@ async function FillCategoryDropDown(){
         let eventCategory = document.getElementById('eventCategory').value;
         let eventTitle = document.getElementById('eventTitle').value;
         let eventLocation = document.getElementById('eventLocation').value;
+        let eventTeaser = document.getElementById('eventTeaser').value;
         let eventDescription = document.getElementById('eventDescription').value;
         let eventImage = document.getElementById('eventImage').files[0];
 
@@ -119,6 +142,7 @@ async function FillCategoryDropDown(){
             formData.append('image',eventImage)
             formData.append('type',eventType)
             formData.append('title',eventTitle)
+            formData.append('teaser',eventTeaser)
             formData.append('description',eventDescription)
             formData.append('date',eventDate)
             formData.append('time',eventTime)
@@ -137,6 +161,8 @@ async function FillCategoryDropDown(){
                 successToast('Request completed');
                 document.getElementById("save-form").reset();
                 document.getElementById('newImg').src="{{asset('backend/images/default.jpg')}}";
+                document.getElementById('teaserWordCount').textContent = '0';
+                document.getElementById('teaserWordCount').style.color = '';
                 await getList();
                 }
                 else{

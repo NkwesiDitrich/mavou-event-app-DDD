@@ -1,9 +1,9 @@
-/* Event Management App - Improved Event Cards CSS */
+/* Event Management App - Improved Event Cards CSS with Teaser Support */
 
-/* Event Card Improvements - Specific Dimensions */
+/* Event Card Improvements - Compact Dynamic Dimensions */
 .event-card-container {
     width: 216px;
-    height: 280px; /* Increased height to accommodate new layout */
+    min-height: 260px; /* Reduced from 280px */
     margin: 0 auto 20px auto;
     border-radius: 8px;
     overflow: hidden;
@@ -24,6 +24,7 @@
     height: 108px;
     overflow: hidden;
     position: relative;
+    flex-shrink: 0; /* Prevent image from shrinking */
 }
 
 .event-card-image img {
@@ -39,11 +40,11 @@
 
 .event-card-details {
     width: 216px;
-    height: 172px; /* Increased to accommodate new layout */
+    min-height: 152px; /* Reduced from 172px */
     padding: 12px;
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    flex: 1; /* Allow details to grow */
     overflow: hidden;
 }
 
@@ -51,13 +52,15 @@
     font-size: 14px;
     font-weight: 600;
     color: #333;
-    margin: 0 0 10px 0;
+    margin: 0 0 6px 0; /* Reduced from 10px to 6px */
     line-height: 1.3;
-    height: 36px;
+    height: auto; /* Allow title to expand naturally */
+    min-height: 36px; /* Minimum height for consistency */
     overflow: hidden;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    flex-shrink: 0; /* Prevent title from shrinking */
 }
 
 .event-card-title a {
@@ -70,12 +73,52 @@
     color: #00ab6b;
 }
 
+/* IMPROVED: Event Card Teaser Styling - More Compact */
+.event-card-teaser {
+    font-size: 12px;
+    color: #555;
+    font-style: italic;
+    line-height: 1.3; /* Reduced from 1.4 */
+    margin: 4px 0 8px 0; /* Reduced spacing: top 4px (was 8px), bottom 8px (was 12px) */
+    padding: 6px 8px; /* Reduced padding from 8px 10px */
+    background: linear-gradient(135deg, rgba(0, 171, 107, 0.08), rgba(0, 171, 107, 0.03));
+    border-radius: 5px; /* Slightly smaller radius */
+    border-left: 3px solid #00ab6b;
+    max-height: none; /* Allow full teaser to show */
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; /* Reduced from 3 to 2 lines for compactness */
+    -webkit-box-orient: vertical;
+    flex-shrink: 0; /* Prevent teaser from shrinking */
+    box-shadow: 0 1px 2px rgba(0, 171, 107, 0.08); /* Reduced shadow */
+    position: relative;
+}
+
+.event-card-teaser:empty {
+    display: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* Add a subtle animation to teaser */
+.event-card-teaser::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(to bottom, #00ab6b, #008a56);
+    border-radius: 0 3px 3px 0;
+}
+
 .event-card-info {
-    flex: 1;
+    flex: 1; /* Allow info section to grow and fill space */
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    margin-bottom: 10px;
+    gap: 5px; /* Reduced from 6px */
+    margin-bottom: 8px; /* Reduced from 10px */
+    min-height: 70px; /* Reduced from 80px */
 }
 
 .event-info-item {
@@ -104,6 +147,8 @@
 .event-card-footer {
     margin-top: auto;
     text-align: center;
+    flex-shrink: 0; /* Prevent footer from shrinking */
+    padding-top: 6px; /* Reduced from 8px */
 }
 
 .event-card-read-more {
@@ -111,8 +156,8 @@
     font-size: 12px;
     font-weight: 500;
     text-decoration: none;
-    transition: color 0.3s ease;
-    padding: 6px 12px;
+    transition: all 0.3s ease;
+    padding: 5px 10px; /* Reduced from 6px 12px */
     border: 1px solid #00ab6b;
     border-radius: 4px;
     display: inline-block;
@@ -122,24 +167,28 @@
     color: white;
     background-color: #00ab6b;
     text-decoration: none;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 171, 107, 0.3);
 }
 
 /* Grid Layout for Event Cards */
 .events-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, 216px);
-    gap: 20px;
+    gap: 18px; /* Reduced from 20px */
     justify-content: center;
     margin: 20px 0;
+    align-items: start; /* Align cards to start to handle different heights */
 }
 
 /* Featured Events Layout */
 .featured-events-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, 216px);
-    gap: 20px;
+    gap: 18px; /* Reduced from 20px */
     justify-content: center;
     margin: 20px 0;
+    align-items: start; /* Align cards to start to handle different heights */
 }
 
 /* Post Page Image Improvements */
@@ -232,8 +281,7 @@
     .event-card-container {
         width: 100%;
         max-width: 216px;
-        height: auto;
-        min-height: 280px;
+        min-height: 250px; /* Reduced for mobile */
     }
     
     .event-card-image {
@@ -242,8 +290,18 @@
     
     .event-card-details {
         width: 100%;
-        height: auto;
-        min-height: 172px;
+        min-height: 142px; /* Reduced for mobile */
+    }
+    
+    .event-card-teaser {
+        font-size: 11px;
+        margin: 3px 0 6px 0; /* Further reduced spacing on mobile */
+        padding: 5px 6px; /* Smaller padding on mobile */
+        -webkit-line-clamp: 2; /* Keep 2 lines on mobile */
+    }
+    
+    .event-card-title {
+        margin: 0 0 4px 0; /* Reduced title margin on mobile */
     }
     
     .post-featured-image {
@@ -272,18 +330,35 @@
     .event-card-container {
         width: 100%;
         max-width: 300px;
-        height: auto;
+        min-height: 240px; /* Compact for small mobile */
     }
     
     .event-card-image {
         width: 100%;
-        height: 150px;
+        height: 140px; /* Slightly smaller image on small mobile */
     }
     
     .event-card-details {
         width: 100%;
-        height: auto;
-        min-height: 172px;
+        min-height: 100px; /* Very compact details section */
+        padding: 10px; /* Reduced padding */
+    }
+    
+    .event-card-teaser {
+        font-size: 10px;
+        margin: 2px 0 4px 0; /* Minimal spacing on small mobile */
+        padding: 4px 5px; /* Very compact padding */
+        -webkit-line-clamp: 2;
+    }
+    
+    .event-card-title {
+        margin: 0 0 3px 0; /* Minimal title margin */
+        font-size: 13px; /* Slightly smaller title */
+    }
+    
+    .event-card-info {
+        gap: 4px; /* Reduced gap */
+        min-height: 60px; /* Compact info section */
     }
     
     .event-detail-item {
@@ -296,31 +371,34 @@
     }
     
     .event-info-item {
-        font-size: 12px;
+        font-size: 10px; /* Smaller text on small mobile */
     }
 }
 
 /* Bootstrap Card Override for Consistency */
 .card-columns .card {
     width: 216px !important;
-    height: 280px !important;
-    margin-bottom: 20px !important;
+    min-height: 260px !important; /* Reduced height */
+    margin-bottom: 18px !important; /* Reduced margin */
     border-radius: 8px !important;
     overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 .card-columns {
     column-count: auto !important;
     display: grid !important;
     grid-template-columns: repeat(auto-fit, 216px) !important;
-    gap: 20px !important;
+    gap: 18px !important; /* Reduced gap */
     justify-content: center !important;
+    align-items: start !important;
 }
 
 /* Featured Events Specific Styling */
 .listfeaturedtag .card {
     width: 216px !important;
-    height: 280px !important;
+    min-height: 260px !important; /* Reduced height */
     display: flex !important;
     flex-direction: column !important;
 }
@@ -337,17 +415,17 @@
 }
 
 .listfeaturedtag .card-block {
-    height: 172px !important;
+    min-height: 152px !important; /* Reduced height */
     padding: 12px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    flex: 1 !important;
 }
 
 /* Recent Events Specific Styling */
 .listrecent .card {
     width: 216px !important;
-    height: 280px !important;
+    min-height: 260px !important; /* Reduced height */
     display: flex !important;
     flex-direction: column !important;
 }
@@ -359,11 +437,11 @@
 }
 
 .listrecent .card-block {
-    height: 172px !important;
+    min-height: 152px !important; /* Reduced height */
     padding: 12px !important;
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
+    flex: 1 !important;
 }
 
 /* Text Truncation for Card Content */
@@ -372,12 +450,40 @@
     font-size: 14px !important;
     font-weight: 600 !important;
     line-height: 1.3 !important;
-    height: 36px !important;
+    min-height: 36px !important;
     overflow: hidden !important;
     display: -webkit-box !important;
     -webkit-line-clamp: 2 !important;
     -webkit-box-orient: vertical !important;
-    margin-bottom: 10px !important;
+    margin-bottom: 6px !important; /* Reduced margin */
+    flex-shrink: 0 !important;
+}
+
+/* IMPROVED: Legacy card teaser support - More Compact */
+.listfeaturedtag .card-teaser,
+.listrecent .card-teaser {
+    font-size: 12px !important;
+    color: #555 !important;
+    font-style: italic !important;
+    line-height: 1.3 !important; /* Reduced line height */
+    margin: 4px 0 8px 0 !important; /* Reduced spacing */
+    padding: 6px 8px !important; /* Reduced padding */
+    background: linear-gradient(135deg, rgba(0, 171, 107, 0.08), rgba(0, 171, 107, 0.03)) !important;
+    border-radius: 5px !important; /* Smaller radius */
+    border-left: 3px solid #00ab6b !important;
+    overflow: hidden !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important; /* Reduced to 2 lines */
+    -webkit-box-orient: vertical !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 1px 2px rgba(0, 171, 107, 0.08) !important; /* Reduced shadow */
+}
+
+.listfeaturedtag .card-teaser:empty,
+.listrecent .card-teaser:empty {
+    display: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
 }
 
 .listfeaturedtag .wrapfooter,
@@ -386,6 +492,8 @@
     width: 100% !important;
     margin-top: auto !important;
     font-size: 10px !important;
+    flex-shrink: 0 !important;
+    padding-top: 6px !important; /* Reduced padding */
 }
 
 /* Hover Effects */
@@ -421,3 +529,88 @@
     font-size: 11px !important;
 }
 
+/* ENHANCED: Card content organization - More Compact */
+.event-card-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 6px; /* Reduced from 8px */
+}
+
+.event-card-meta {
+    margin-top: auto;
+    padding-top: 6px; /* Reduced from 8px */
+    border-top: 1px solid #f0f0f0;
+}
+
+/* IMPROVED: Teaser visibility and readability */
+.event-card-teaser {
+    position: relative;
+    z-index: 1;
+}
+
+.event-card-teaser::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 15px; /* Reduced from 20px */
+    height: 15px; /* Reduced from 20px */
+    background: linear-gradient(45deg, transparent 50%, rgba(0, 171, 107, 0.1) 50%);
+    border-radius: 0 0 5px 0; /* Adjusted for smaller radius */
+}
+
+/* ENHANCED: Card spacing and layout - Tighter Spacing */
+.event-card-container .event-card-details > * {
+    margin-bottom: 0;
+}
+
+.event-card-container .event-card-details > *:not(:last-child) {
+    margin-bottom: 6px; /* Reduced from 8px */
+}
+
+.event-card-container .event-card-teaser + .event-card-info {
+    margin-top: 2px; /* Reduced from 4px */
+}
+
+/* IMPROVED: Focus states for accessibility */
+.event-card-title a:focus,
+.event-card-read-more:focus {
+    outline: 2px solid #00ab6b;
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* ENHANCED: Loading state placeholder */
+.event-card-container.loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* IMPROVED: Print styles */
+@media print {
+    .event-card-container {
+        break-inside: avoid;
+        box-shadow: none;
+        border: 1px solid #ddd;
+    }
+    
+    .event-card-teaser {
+        background: #f9f9f9 !important;
+        color: #333 !important;
+    }
+    
+    .event-card-read-more {
+        display: none;
+    }
+}

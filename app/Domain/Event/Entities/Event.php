@@ -8,6 +8,7 @@ use App\Domain\Event\ValueObjects\EventLocation;
 use App\Domain\Event\ValueObjects\EventType;
 use App\Domain\Event\ValueObjects\EventDescription;
 use App\Domain\Event\ValueObjects\EventTime;
+use App\Domain\Event\ValueObjects\EventTeaser;
 use App\Domain\Event\Events\EventCreated;
 use App\Domain\Event\Events\EventUpdated;
 use App\Domain\Event\Events\EventDeleted;
@@ -17,6 +18,7 @@ class Event
 {
     private ?int $id;
     private EventTitle $title;
+    private ?EventTeaser $teaser;
     private EventDescription $description;
     private EventDate $date;
     private EventTime $time;
@@ -39,6 +41,7 @@ class Event
         int $userId,
         int $categoryId,
         ?string $image = null,
+        ?EventTeaser $teaser = null,
         ?int $id = null,
         ?\DateTime $createdAt = null,
         ?\DateTime $updatedAt = null
@@ -48,6 +51,7 @@ class Event
         
         $this->id = $id;
         $this->title = $title;
+        $this->teaser = $teaser;
         $this->description = $description;
         $this->date = $date;
         $this->time = $time;
@@ -73,7 +77,8 @@ class Event
         EventType $type,
         int $userId,
         int $categoryId,
-        ?string $image = null
+        ?string $image = null,
+        ?EventTeaser $teaser = null
     ): self {
         return new self(
             $title,
@@ -84,7 +89,8 @@ class Event
             $type,
             $userId,
             $categoryId,
-            $image
+            $image,
+            $teaser
         );
     }
 
@@ -95,9 +101,11 @@ class Event
         EventTime $time,
         EventLocation $location,
         EventType $type,
-        ?string $image = null
+        ?string $image = null,
+        ?EventTeaser $teaser = null
     ): void {
         $this->title = $title;
+        $this->teaser = $teaser;
         $this->description = $description;
         $this->date = $date;
         $this->time = $time;
@@ -121,6 +129,12 @@ class Event
     public function removeImage(): void
     {
         $this->image = null;
+        $this->updatedAt = new \DateTime();
+    }
+
+    public function updateTeaser(?EventTeaser $teaser): void
+    {
+        $this->teaser = $teaser;
         $this->updatedAt = new \DateTime();
     }
 
@@ -195,6 +209,11 @@ class Event
         return $this->image !== null && !empty($this->image);
     }
 
+    public function hasTeaser(): bool
+    {
+        return $this->teaser !== null && !$this->teaser->isEmpty();
+    }
+
     public function getTimeOfDay(): string
     {
         return $this->time->getTimeOfDay();
@@ -265,6 +284,7 @@ class Event
     // Getters
     public function getId(): ?int { return $this->id; }
     public function getTitle(): EventTitle { return $this->title; }
+    public function getTeaser(): ?EventTeaser { return $this->teaser; }
     public function getDescription(): EventDescription { return $this->description; }
     public function getDate(): EventDate { return $this->date; }
     public function getTime(): EventTime { return $this->time; }
@@ -282,6 +302,7 @@ class Event
         return [
             'id' => $this->id,
             'title' => $this->title->getValue(),
+            'teaser' => $this->teaser ? $this->teaser->getValue() : null,
             'description' => $this->description->getValue(),
             'date' => $this->date->getFormattedDate(),
             'time' => $this->time->getValue(),

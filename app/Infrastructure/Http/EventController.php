@@ -83,9 +83,13 @@ class EventController extends Controller
                 $imagePath = 'uploads/' . $img_name;
             }
 
+            // Get teaser field (optional)
+            $teaser = $request->input('teaser', '');
+
             // Direct database insert for maximum performance
             $eventId = DB::table('events')->insertGetId([
                 'title' => $request->input('title'),
+                'teaser' => $teaser,
                 'description' => $request->input('description'),
                 'date' => $request->input('date'),
                 'time' => $request->input('time', ''),
@@ -121,6 +125,7 @@ class EventController extends Controller
                 ->select(
                     'events.id',
                     'events.title',
+                    'events.teaser',
                     'events.description',
                     'events.date',
                     'events.time',
@@ -141,6 +146,7 @@ class EventController extends Controller
                 return [
                     'id' => $event->id,
                     'title' => $event->title,
+                    'teaser' => $event->teaser,
                     'description' => $event->description,
                     'date' => $event->date,
                     'time' => $event->time,
@@ -182,6 +188,7 @@ class EventController extends Controller
 
             $updateData = [
                 'title' => $request->input('title'),
+                'teaser' => $request->input('teaser', ''),
                 'description' => $request->input('description'),
                 'date' => $request->input('date'),
                 'time' => $request->input('time', ''),
@@ -266,6 +273,7 @@ class EventController extends Controller
             return response()->json([
                 'id' => $event->id,
                 'title' => $event->title,
+                'teaser' => $event->teaser,
                 'description' => $event->description,
                 'date' => $event->date,
                 'time' => $event->time,
@@ -400,6 +408,7 @@ class EventController extends Controller
         return [
             'id' => $event->getId(),
             'title' => $event->getTitle()->getValue(),
+            'teaser' => $event->hasTeaser() ? $event->getTeaser()->getValue() : null,
             'description' => $event->getDescription()->getValue(),
             'short_description' => $event->getShortDescription(),
             'date' => $event->getDate()->getFormattedDate(),
@@ -424,6 +433,7 @@ class EventController extends Controller
             'is_online' => $event->isOnlineEvent(),
             'is_physical' => $event->isPhysicalEvent(),
             'has_image' => $event->hasImage(),
+            'has_teaser' => $event->hasTeaser(),
             'is_business_hours' => $event->isBusinessHours(),
             'can_be_modified' => $event->canBeModified(),
             'can_be_deleted' => $event->canBeDeleted(),

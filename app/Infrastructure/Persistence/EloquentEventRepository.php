@@ -10,6 +10,7 @@ use App\Domain\Event\ValueObjects\EventDate;
 use App\Domain\Event\ValueObjects\EventTime;
 use App\Domain\Event\ValueObjects\EventLocation;
 use App\Domain\Event\ValueObjects\EventType;
+use App\Domain\Event\ValueObjects\EventTeaser;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -33,7 +34,7 @@ class EloquentEventRepository implements EventRepositoryInterface
                 // Create new event
                 $id = DB::table($this->table)->insertGetId($data);
                 
-                // Return new event with ID
+                // Return new event with ID - FIXED: Use proper constructor parameters
                 return new Event(
                     $event->getTitle(),
                     $event->getDescription(),
@@ -44,6 +45,7 @@ class EloquentEventRepository implements EventRepositoryInterface
                     $event->getUserId(),
                     $event->getCategoryId(),
                     $event->getImage(),
+                    $event->hasTeaser() ? $event->getTeaser() : null,
                     $id,
                     $event->getCreatedAt(),
                     $event->getUpdatedAt()
@@ -319,6 +321,7 @@ class EloquentEventRepository implements EventRepositoryInterface
                 ->where('title', 'LIKE', '%' . $query . '%')
                 ->orWhere('description', 'LIKE', '%' . $query . '%')
                 ->orWhere('location', 'LIKE', '%' . $query . '%')
+                ->orWhere('teaser', 'LIKE', '%' . $query . '%')
                 ->orderBy('date', 'desc')
                 ->get();
 
@@ -601,11 +604,17 @@ class EloquentEventRepository implements EventRepositoryInterface
     }
 
     /**
-     * CRITICAL FIX: Use EventDate::fromDatabase() to allow past dates from database
+     * FIXED: Map database data to Event entity with teaser support
      */
     private function mapToEntity($data): Event
     {
         try {
+            // Handle teaser field
+            $teaser = null;
+            if (isset($data->teaser) && !empty($data->teaser)) {
+                $teaser = new EventTeaser($data->teaser);
+            }
+
             return new Event(
                 new EventTitle($data->title),
                 new EventDescription($data->description),
@@ -616,6 +625,7 @@ class EloquentEventRepository implements EventRepositoryInterface
                 $data->user_id,
                 $data->categorie_id,
                 $data->image,
+                $teaser,
                 $data->id,
                 new \DateTime($data->created_at),
                 new \DateTime($data->updated_at)
@@ -697,6 +707,7 @@ class EloquentEventRepository implements EventRepositoryInterface
             1, // user_id
             1, // category_id
             'default-event.jpg',
+            null, // teaser
             $id,
             new \DateTime(),
             new \DateTime()
@@ -727,13 +738,14 @@ class EloquentEventRepository implements EventRepositoryInterface
                 }
             }
             
-            // NEW: Apply search filter
+            // NEW: Apply search filter including teaser
             if ($search && trim($search) !== '') {
                 $searchTerm = '%' . trim($search) . '%';
                 $query->where(function($q) use ($searchTerm) {
                     $q->where('title', 'LIKE', $searchTerm)
                       ->orWhere('description', 'LIKE', $searchTerm)
-                      ->orWhere('location', 'LIKE', $searchTerm);
+                      ->orWhere('location', 'LIKE', $searchTerm)
+                      ->orWhere('teaser', 'LIKE', $searchTerm);
                 });
             }
             
@@ -775,13 +787,14 @@ class EloquentEventRepository implements EventRepositoryInterface
                 }
             }
             
-            // NEW: Apply search filter
+            // NEW: Apply search filter including teaser
             if ($search && trim($search) !== '') {
                 $searchTerm = '%' . trim($search) . '%';
                 $query->where(function($q) use ($searchTerm) {
                     $q->where('title', 'LIKE', $searchTerm)
                       ->orWhere('description', 'LIKE', $searchTerm)
-                      ->orWhere('location', 'LIKE', $searchTerm);
+                      ->orWhere('location', 'LIKE', $searchTerm)
+                      ->orWhere('teaser', 'LIKE', $searchTerm);
                 });
             }
             
