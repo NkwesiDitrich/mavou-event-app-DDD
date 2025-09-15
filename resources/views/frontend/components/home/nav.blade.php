@@ -22,9 +22,7 @@
                 <li class="nav-item">
                 <a class="nav-link" href="author.html">Author</a>
                 </li> --}}
-                <li class="nav-item">
-                    <a class="nav-link" href="#" onclick="showPasswordModal()">Admin</a>
-                </li> 
+                {{-- REMOVED: Admin option as requested --}}
             </ul>
             <!-- End Menu -->
             <!-- Begin Search -->

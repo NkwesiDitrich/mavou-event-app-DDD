@@ -11,6 +11,7 @@ use App\Application\Queries\GetUserEventsQuery;
 use App\Application\Handlers\GetUserEventsHandler;
 use App\Infrastructure\Persistence\EloquentEventRepository;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -63,7 +64,7 @@ class HomeController extends Controller
             
             // Enrich the post with user and category names
             $post = $this->enrichEventWithNames($post);
-            
+
             // Note: Removed related events as per user request
             // $relatedEvents = $this->eventRepository->getRelatedEvents(
             //     $post->getCategoryId(), 
@@ -83,13 +84,25 @@ class HomeController extends Controller
     function EventRegistration(Request $request)
     {
         try {
+            // ENHANCED: Validate email uniqueness for the specific event
+            $email = $request->input('email');
+            $eventId = $request->input('event_id');
+            
+            // Check if email is provided and if it already exists for this event
+            if (!empty($email) && $this->isEmailAlreadyRegistered($email, $eventId)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'This email has already been used, please use another email');
+            }
+
+            // Proceed with registration if email is unique for this event
             Registration::create([
                 'date' => now()->toDateString(),
                 'name' => $request->input('name'),
                 'mobile' => $request->input('mobile'),
-                'email' => $request->input('email'),
+                'email' => $email,
                 'remark' => $request->input('remark'),
-                'event_id' => $request->input('event_id'),
+                'event_id' => $eventId,
                 'user_id' => $request->input('user_id')
             ]);
 
@@ -97,7 +110,33 @@ class HomeController extends Controller
         } catch (\Exception $e) {
             Log::error('Error in EventRegistration: ' . $e->getMessage());
             
-            return redirect()->back()->with('error', 'Registration failed. Please try again later.');
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Registration failed. Please try again later.');
+        }
+    }
+
+    /**
+     * Check if email is already registered for a specific event
+     * 
+     * @param string $email
+     * @param int $eventId
+     * @return bool
+     */
+    private function isEmailAlreadyRegistered(string $email, int $eventId): bool
+    {
+        try {
+            // Check if the email already exists for this specific event
+            $existingRegistration = DB::table('registrations')
+                ->where('email', $email)
+                ->where('event_id', $eventId)
+                ->first();
+            
+            return $existingRegistration !== null;
+        } catch (\Exception $e) {
+            Log::error('Error checking email registration: ' . $e->getMessage());
+            // In case of database error, allow registration to proceed
+            return false;
         }
     }
 
@@ -145,4 +184,3 @@ class HomeController extends Controller
         return $event;
     }
 }
-
