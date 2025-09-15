@@ -9,6 +9,9 @@ Route::get('/',[HomeController::class,'IndexPage']);
 
 Route::get('/post/{id}',[HomeController::class,'PostPage']);
 
+// NEW: AJAX endpoint for email validation
+Route::post('/check-email-availability',[HomeController::class,'checkEmailAvailability']);
+
 Route::post('/event-registration',[HomeController::class,'EventRegistration']);
   
 require_once __DIR__ . '/ddd_api.php';

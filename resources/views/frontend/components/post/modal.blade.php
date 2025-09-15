@@ -44,8 +44,8 @@
                         <label class="form-label" for="email">Email address</label>
                         <input type="email" id="email" name="email" class="form-control" placeholder="Email" 
                                value="{{ old('email') }}"/>
-                        <!-- Email validation message container -->
-                        <div id="emailValidationMessage" class="text-danger mt-1" style="display: none;"></div>
+                        <!-- Email validation message container - ENHANCED -->
+                        <div id="emailValidationMessage" class="text-danger mt-1" style="display: none; font-size: 14px; font-weight: 500;"></div>
                         
                         <label class="form-label" for="remarks">Remarks</label>
                         <textarea id="remarks" name="remarks" rows="2" class="form-control" placeholder="Remarks">{{ old('remarks') }}</textarea>
@@ -77,8 +77,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     let emailCheckTimeout;
     let isEmailValid = true;
+    let isCheckingEmail = false;
 
-    // Real-time email validation
+    // ENHANCED: Real-time email validation with immediate feedback
     emailInput.addEventListener('input', function() {
         const email = this.value.trim();
         
@@ -86,8 +87,7 @@ document.addEventListener('DOMContentLoaded', function() {
         clearTimeout(emailCheckTimeout);
         
         // Hide validation message initially
-        emailValidationMessage.style.display = 'none';
-        emailValidationMessage.textContent = '';
+        hideEmailError();
         
         // Reset email validity
         isEmailValid = true;
@@ -95,34 +95,130 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Only check if email is not empty and is valid format
         if (email && isValidEmailFormat(email)) {
-            // Debounce the email check (wait 500ms after user stops typing)
+            // Debounce the email check (wait 800ms after user stops typing)
             emailCheckTimeout = setTimeout(() => {
                 checkEmailAvailability(email, eventId);
-            }, 500);
+            }, 800);
         }
     });
 
-    // Form submission handler
+    // ENHANCED: Form submission handler with immediate validation
     form.addEventListener('submit', function(e) {
-        // Prevent submission if email is not valid
-        if (!isEmailValid) {
-            e.preventDefault();
-            showEmailError('Please use a different email address.');
-            return false;
+        e.preventDefault(); // Always prevent default first
+        
+        const email = emailInput.value.trim();
+        const eventId = document.getElementById('event_id').value;
+        
+        // If email is empty, allow submission
+        if (!email) {
+            submitForm();
+            return;
+        }
+        
+        // If email format is invalid, show error
+        if (!isValidEmailFormat(email)) {
+            showEmailError('Please enter a valid email address');
+            return;
         }
         
         // Show loading state
         setLoadingState(true);
+        
+        // Check email availability immediately before submission
+        checkEmailAvailabilityForSubmission(email, eventId);
     });
 
-    // Check email availability via AJAX
+    // ENHANCED: Check email availability via AJAX for real-time feedback
     function checkEmailAvailability(email, eventId) {
-        // Create a simple check by making a HEAD request to see if we can detect duplicates
-        // Since we don't have a dedicated API endpoint, we'll rely on server-side validation
-        // This is a placeholder for potential future AJAX implementation
+        if (isCheckingEmail) return; // Prevent multiple simultaneous requests
         
-        // For now, we'll rely on server-side validation in the HomeController
-        // The real validation happens when the form is submitted
+        isCheckingEmail = true;
+        
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                         document.querySelector('input[name="_token"]')?.value || '';
+        
+        fetch('/check-email-availability', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                email: email,
+                event_id: eventId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            isCheckingEmail = false;
+            
+            if (!data.available) {
+                showEmailError(data.message || 'This email has already been used, please use another email');
+                isEmailValid = false;
+            } else {
+                hideEmailError();
+                isEmailValid = true;
+            }
+            updateSubmitButton();
+        })
+        .catch(error => {
+            isCheckingEmail = false;
+            console.error('Error checking email:', error);
+            // On error, allow submission to proceed
+            isEmailValid = true;
+            hideEmailError();
+            updateSubmitButton();
+        });
+    }
+
+    // ENHANCED: Check email availability specifically for form submission
+    function checkEmailAvailabilityForSubmission(email, eventId) {
+        // Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || 
+                         document.querySelector('input[name="_token"]')?.value || '';
+        
+        fetch('/check-email-availability', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                email: email,
+                event_id: eventId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            setLoadingState(false);
+            
+            if (!data.available) {
+                // Show error message under email field
+                showEmailError(data.message || 'This email has already been used, please use another email');
+                isEmailValid = false;
+                updateSubmitButton();
+            } else {
+                // Email is available, proceed with form submission
+                hideEmailError();
+                isEmailValid = true;
+                submitForm();
+            }
+        })
+        .catch(error => {
+            setLoadingState(false);
+            console.error('Error checking email:', error);
+            // On error, allow submission to proceed
+            submitForm();
+        });
+    }
+
+    // Submit the form
+    function submitForm() {
+        setLoadingState(true);
+        form.submit();
     }
 
     // Validate email format
@@ -131,17 +227,35 @@ document.addEventListener('DOMContentLoaded', function() {
         return emailRegex.test(email);
     }
 
-    // Show email error message
+    // ENHANCED: Show email error message with better styling
     function showEmailError(message) {
         emailValidationMessage.textContent = message;
         emailValidationMessage.style.display = 'block';
+        emailValidationMessage.style.color = '#dc3545';
+        emailValidationMessage.style.fontWeight = '500';
+        emailValidationMessage.style.marginTop = '5px';
+        
+        // Add red border to email input
+        emailInput.style.borderColor = '#dc3545';
+        emailInput.style.boxShadow = '0 0 0 0.2rem rgba(220, 53, 69, 0.25)';
+        
         isEmailValid = false;
         updateSubmitButton();
     }
 
+    // Hide email error message
+    function hideEmailError() {
+        emailValidationMessage.style.display = 'none';
+        emailValidationMessage.textContent = '';
+        
+        // Remove red border from email input
+        emailInput.style.borderColor = '';
+        emailInput.style.boxShadow = '';
+    }
+
     // Update submit button state
     function updateSubmitButton() {
-        if (isEmailValid) {
+        if (isEmailValid && !isCheckingEmail) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('btn-secondary');
             submitBtn.classList.add('btn-primary');
@@ -159,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
             submitText.textContent = 'Registering...';
             submitSpinner.style.display = 'inline-block';
         } else {
-            submitBtn.disabled = false;
+            updateSubmitButton();
             submitText.textContent = 'Save';
             submitSpinner.style.display = 'none';
         }
@@ -193,8 +307,14 @@ document.addEventListener('DOMContentLoaded', function() {
     box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
-.text-danger {
-    font-size: 0.875em;
+/* ENHANCED: Better error message styling */
+#emailValidationMessage {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #dc3545 !important;
+    margin-top: 5px !important;
+    padding: 5px 0;
+    animation: fadeInError 0.3s ease-in-out;
 }
 
 .btn:disabled {
@@ -207,12 +327,31 @@ document.addEventListener('DOMContentLoaded', function() {
     height: 1rem;
 }
 
+/* Error state for email input */
+.form-control.error {
+    border-color: #dc3545 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes fadeInError {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
 .alert {
     animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Better visual feedback */
+.text-danger {
+    display: block !important;
+    margin-top: 5px !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
 }
 </style>

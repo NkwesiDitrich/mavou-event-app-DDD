@@ -12,6 +12,7 @@ use App\Application\Handlers\GetUserEventsHandler;
 use App\Infrastructure\Persistence\EloquentEventRepository;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\JsonResponse;
 
 class HomeController extends Controller
 {
@@ -78,6 +79,49 @@ class HomeController extends Controller
             
             // If database error, show error page or redirect
             return redirect()->route('home')->with('error', 'Unable to load event details. Please try again later.');
+        }
+    }
+    
+    /**
+     * NEW: AJAX endpoint to check email availability for an event
+     */
+    public function checkEmailAvailability(Request $request): JsonResponse
+    {
+        try {
+            $email = $request->input('email');
+            $eventId = $request->input('event_id');
+            
+            // Validate inputs
+            if (empty($email) || empty($eventId)) {
+                return response()->json([
+                    'available' => true,
+                    'message' => ''
+                ]);
+            }
+            
+            // Check if email is already registered for this event
+            $isRegistered = $this->isEmailAlreadyRegistered($email, $eventId);
+            
+            if ($isRegistered) {
+                return response()->json([
+                    'available' => false,
+                    'message' => 'This email has already been used, please use another email'
+                ]);
+            }
+            
+            return response()->json([
+                'available' => true,
+                'message' => ''
+            ]);
+            
+        } catch (\Exception $e) {
+            Log::error('Error checking email availability: ' . $e->getMessage());
+            
+            // In case of error, allow registration to proceed
+            return response()->json([
+                'available' => true,
+                'message' => ''
+            ]);
         }
     }
     
