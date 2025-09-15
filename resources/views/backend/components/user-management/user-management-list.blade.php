@@ -238,14 +238,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function loadUserEvents(userData) {
         try {
-            // Get all registrations for this user (by email or name)
+            // FIXED: Use the correct search parameter that the controller now supports
             const response = await fetch('/user-management/registrations?' + new URLSearchParams({
-                search_user: userData.email || userData.name
+                search_user: userData.email !== 'N/A' ? userData.email : userData.name
             }), {
                 headers: {
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
                 }
             });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
             
             const data = await response.json();
             
@@ -256,17 +262,28 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             console.error('Error loading user events:', error);
-            displayUserDetails(userData, []);
+            displayUserDetails(userData, [], error.message);
         }
     }
 
-    function displayUserDetails(userData, userRegistrations) {
+    function displayUserDetails(userData, userRegistrations, errorMessage = null) {
         const content = document.getElementById('userDetailsContent');
         
-        // Filter registrations for this specific user
-        const filteredRegistrations = userRegistrations.filter(reg => 
-            reg.email === userData.email || reg.name === userData.name
-        );
+        // ENHANCED: Better filtering logic for user registrations
+        const filteredRegistrations = userRegistrations.filter(reg => {
+            // Match by email (exact, case-insensitive) if both have valid emails
+            if (userData.email !== 'N/A' && reg.email && reg.email.trim() !== '') {
+                return reg.email.toLowerCase() === userData.email.toLowerCase();
+            }
+            
+            // Fallback to name matching (case-insensitive, partial match)
+            return reg.name.toLowerCase().includes(userData.name.toLowerCase()) ||
+                   userData.name.toLowerCase().includes(reg.name.toLowerCase());
+        });
+        
+        // FIXED: Calculate statistics correctly
+        const totalEvents = filteredRegistrations.length;
+        const totalCheckins = filteredRegistrations.filter(reg => reg.checked_in).length;
         
         let html = `
             <div class="row">
@@ -308,13 +325,13 @@ document.addEventListener('DOMContentLoaded', function() {
                             <div class="row text-center">
                                 <div class="col-6">
                                     <div class="border-end">
-                                        <h4 class="text-primary">${filteredRegistrations.length}</h4>
+                                        <h4 class="text-primary">${totalEvents}</h4>
                                         <small class="text-muted">Total Events</small>
                                     </div>
                                 </div>
                                 <div class="col-6">
-                                    <h4 class="text-success">${filteredRegistrations.filter(reg => reg.checked_in).length}</h4>
-                                    <small class="text-muted">Checked In</small>
+                                    <h4 class="text-success">${totalCheckins}</h4>
+                                    <small class="text-muted">Total Checkin</small>
                                 </div>
                             </div>
                         </div>
@@ -331,11 +348,21 @@ document.addEventListener('DOMContentLoaded', function() {
                         <div class="card-body">
         `;
         
+        if (errorMessage) {
+            html += `
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Warning:</strong> ${errorMessage}
+                </div>
+            `;
+        }
+        
         if (filteredRegistrations.length === 0) {
             html += `
                 <div class="text-center py-4 text-muted">
                     <i class="bi bi-calendar-x fs-1"></i>
                     <p class="mt-2">No event registrations found for this user</p>
+                    ${errorMessage ? '<small class="text-muted">There may have been an error loading the data.</small>' : ''}
                 </div>
             `;
         } else {
@@ -355,19 +382,30 @@ document.addEventListener('DOMContentLoaded', function() {
             
             filteredRegistrations.forEach(registration => {
                 const statusBadge = registration.checked_in ? 
-                    '<span class="badge bg-success">Checked In</span>' : 
-                    '<span class="badge bg-warning">Not Checked In</span>';
+                    '<span class="badge bg-success"><i class="bi bi-check-circle"></i> Checked In</span>' : 
+                    '<span class="badge bg-warning"><i class="bi bi-clock"></i> Not Checked In</span>';
                 
                 const checkinDate = registration.checked_in_at ? 
-                    new Date(registration.checked_in_at).toLocaleDateString() : 
-                    'N/A';
+                    new Date(registration.checked_in_at).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }) : 'N/A';
+                
+                const registrationDate = new Date(registration.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
                 
                 html += `
                     <tr>
                         <td>
                             <strong>${registration.event_title || 'Unknown Event'}</strong>
                         </td>
-                        <td>${new Date(registration.created_at).toLocaleDateString()}</td>
+                        <td>${registrationDate}</td>
                         <td>${statusBadge}</td>
                         <td>${checkinDate}</td>
                     </tr>

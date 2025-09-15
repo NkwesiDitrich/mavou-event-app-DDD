@@ -69,16 +69,29 @@ class UserManagementController extends Controller
     }
 
     /**
-     * Get list of registrations for API (EXISTING - Keep this)
+     * Get list of registrations for API (ENHANCED - Now supports search_user parameter)
      */
     public function RegistrationList(Request $request): JsonResponse
     {
         try {
             $userId = auth()->id();
             $eventId = $request->get('event_id');
+            $searchUser = $request->get('search_user'); // NEW: Support for searching specific user
 
             $query = new GetUserRegistrationsQuery($userId, $eventId);
             $registrations = $this->getUserRegistrationsHandler->handle($query);
+
+            // Filter registrations by specific user if search_user is provided
+            if ($searchUser) {
+                $registrations = array_filter($registrations, function($registration) use ($searchUser) {
+                    $name = $registration->getName()->getValue();
+                    $email = $registration->getEmail() ? $registration->getEmail()->getValue() : '';
+                    
+                    // Match by email (exact) or name (partial)
+                    return (strcasecmp($email, $searchUser) === 0) || 
+                           (stripos($name, $searchUser) !== false);
+                });
+            }
 
             // Convert to array format expected by frontend
             $registrationsArray = array_map(function($registration) {
@@ -98,7 +111,7 @@ class UserManagementController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'data' => $registrationsArray
+                'data' => array_values($registrationsArray) // Re-index array after filtering
             ]);
         } catch (\Exception $e) {
             Log::error('Registration list error: ' . $e->getMessage());
