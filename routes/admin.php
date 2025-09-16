@@ -21,7 +21,7 @@ Route::get('/verifyOtp', [UserController::class, 'VerifyOTPPage']);
 
 Route::group(['middleware' => 'auth'], function() {
 
-    Route::get('/dashboard', [DashboardController::class, 'DashboardPage'])->name('home');
+   // Route::get('/dashboard', [DashboardController::class, 'DashboardPage'])->name('home');
     Route::get('/resetPassword', [UserController::class, 'ResetPasswordPage']);
     Route::get('/userProfile', [UserController::class, 'ProfilePage']);
    
