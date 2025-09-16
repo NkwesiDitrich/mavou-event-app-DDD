@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class DashboardController extends Controller
 {
-    function DashboardPage():View{
-        return view('backend.pages.dashboard.dashboard-page');
+    function DashboardPage(): RedirectResponse
+    {
+        // Redirect to the enhanced dashboard
+        return redirect()->route('dashboard');
     }
 }
