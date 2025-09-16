@@ -2,7 +2,7 @@
 	================================================== -->
 	<section class="recent-posts">
         <div class="section-title">
-            <h2><span>All Stories</span></h2>
+            <h2><span>Recents</span></h2>
         </div>
         <div class="events-grid">
             @foreach ($recentEvents as $recent )
