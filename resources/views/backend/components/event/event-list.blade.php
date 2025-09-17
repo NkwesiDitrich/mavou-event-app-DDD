@@ -60,8 +60,8 @@ async function getList() {
                     <td>${item['title']}</td>
                     <td>${item['description']??''}</td>
                     <td>
-                        <button data-path="${item['image']}" data-id="${item['id']}" class="btn editBtn btn-sm btn-outline-success">Edit</button>
-                        <button data-path="${item['image']}" data-id="${item['id']}" class="btn deleteBtn btn-sm btn-outline-danger">Delete</button>
+                        <i data-path="${item['image']}" data-id="${item['id']}" class="bi bi-pencil editBtn me-3" style="cursor: pointer; font-size: 16px; color: #28a745;" title="Edit Event"></i>
+                        <i data-path="${item['image']}" data-id="${item['id']}" class="bi bi-trash deleteBtn" style="cursor: pointer; font-size: 16px; color: #dc3545;" title="Delete Event"></i>
                     </td>
                  </tr>`
         tableList.append(row)
