@@ -6,7 +6,7 @@
 <meta name="description" content="">
 <meta name="author" content="">
 <link rel="icon" href="{{ asset('frontend/img/favicon.ico')}}">
-<title>Event Management </title>
+<title>Event Management - Mavou Consulting</title>
 <!-- Bootstrap core CSS -->
 <link href="{{ asset('frontend/css/bootstrap.min.css') }}" rel="stylesheet">
 <!-- Fonts -->
@@ -16,6 +16,8 @@
 <link href="{{ asset('frontend/css/arise.css')}}" rel="stylesheet">
 <!-- Improved styles for event cards with organizer names and category names -->
 <link href="{{ asset('frontend/css/improved-event-cards.css')}}" rel="stylesheet">
+<!-- Enhanced Home Page Styles -->
+<link href="{{ asset('frontend/css/enhanced-home.css')}}" rel="stylesheet">
 </head>
 <body>
 @include('frontend.components.home.nav')
@@ -38,7 +40,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
 <script src="{{ asset('frontend/js/bootstrap.min.js') }}"></script>
 <script src="{{ asset('frontend/js/ie10-viewport-bug-workaround.js') }}"></script>
-<script src="{{ asset('frontend/js/arise.js')}}"></script>
+<script src="{{ asset('frontend/js/arise.js')}}\"></script>
 </body>
 </html>
-

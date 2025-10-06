@@ -77,7 +77,7 @@
 								<i class="fa fa-info-circle"></i>Event Type
 							</h5>
 							<p>
-								<span class="badge" style="background: {{ $post->getType()->getValue() == 'Feature' ? '#28a745' : '#17a2b8' }}; color: white; padding: 5px 10px; border-radius: 15px;">
+								<span class="badge event-type-badge" style="background: {{ $post->getType()->getValue() == 'Feature' ? '#3b82f6' : '#1e3a8a' }};">
 									{{ $post->getType()->getValue() }} Event
 								</span>
 							</p>
@@ -101,7 +101,7 @@
 				<div class="registration-call-to-action">
 					<h4><i class="fa fa-ticket"></i> Register for This Event</h4>
 					<p>Don't miss out on this amazing event! Register now to secure your spot.</p>
-					<button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#registrationModal">
+					<button type="button" class="btn btn-primary btn-lg register-btn" data-toggle="modal" data-target="#registrationModal">
 						<i class="fa fa-user-plus"></i> Register Now
 					</button>
 				</div>
@@ -187,7 +187,7 @@
 						@enderror
 					</div>
 					
-					<button type="submit" class="btn btn-primary btn-block">
+					<button type="submit" class="btn btn-primary btn-block submit-registration-btn">
 						<i class="fa fa-check"></i> Complete Registration
 					</button>
 				</form>
@@ -203,132 +203,179 @@
 <!-- End Registration Modal -->
 
 <style>
-.event-details-section .event-detail-item h5 {
+/* Post Page Enhancements with Royal Blue Theme */
+
+.posttitle {
+    color: #1e3a8a;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    line-height: 1.3;
+}
+
+.post-featured-image {
+    width: 100%;
+    max-height: 500px;
+    object-fit: cover;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.event-details-section {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    padding: 35px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    border-left: 5px solid #3b82f6;
+    box-shadow: 0 2px 15px rgba(59, 130, 246, 0.1);
+}
+
+.event-details-section h3 {
+    color: #1e3a8a;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.event-details-section h3 i {
+    color: #3b82f6;
+}
+
+.event-detail-item {
+    margin-bottom: 20px;
+}
+
+.event-detail-item h5 {
     font-weight: 600;
     text-transform: uppercase;
-    font-size: 14px;
+    font-size: 0.85rem;
     letter-spacing: 0.5px;
     display: flex;
     align-items: center;
     gap: 8px;
+    color: #1e3a8a;
+    margin-bottom: 8px;
 }
 
-.event-details-section .event-detail-item h5 i {
-    color: #00ab6b;
-    width: 16px;
+.event-detail-item h5 i {
+    color: #3b82f6;
+    width: 18px;
     text-align: center;
+    font-size: 1rem;
 }
 
-.event-details-section .event-detail-item p {
-    margin-left: 24px;
-    font-size: 14px;
-    color: #666;
+.event-detail-item p {
+    margin-left: 26px;
+    font-size: 1rem;
+    color: #374151;
+    font-weight: 500;
 }
 
-.badge {
-    font-size: 12px !important;
-    font-weight: 500 !important;
+.event-type-badge {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    padding: 8px 16px !important;
+    border-radius: 20px !important;
+    color: white !important;
+    display: inline-block;
 }
 
-/* Form validation styling */
-.is-invalid {
-    border-color: #dc3545 !important;
+.article-post {
+    background: white;
+    padding: 35px;
+    border-radius: 15px;
+    margin-bottom: 40px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
 }
 
-.invalid-feedback {
-    display: block;
-    width: 100%;
-    margin-top: 0.25rem;
-    font-size: 0.875rem;
-    color: #dc3545;
+.article-post h3 {
+    color: #1e3a8a;
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 20px;
 }
 
-.alert {
-    padding: 0.75rem 1.25rem;
-    margin-bottom: 1rem;
-    border: 1px solid transparent;
-    border-radius: 0.25rem;
-}
-
-.alert-danger {
-    color: #721c24;
-    background-color: #f8d7da;
-    border-color: #f5c6cb;
-}
-
-.alert ul {
-    padding-left: 1.2rem;
-}
-
-.alert li {
-    margin-bottom: 0.25rem;
+.article-post p {
+    color: #374151;
+    font-size: 1.1rem;
+    line-height: 1.8;
 }
 
 /* Event Registration Section Styling */
 .event-registration-section {
-    background: linear-gradient(135deg, #007bff, #0056b3);
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
     color: white;
-    padding: 30px;
-    margin: 30px 0;
-    border-radius: 10px;
+    padding: 40px;
+    margin: 40px 0;
+    border-radius: 15px;
     text-align: center;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.3);
 }
 
 .registration-call-to-action h4 {
     margin-bottom: 15px;
-    font-size: 24px;
-    font-weight: 600;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: white;
 }
 
 .registration-call-to-action h4 i {
     margin-right: 10px;
-    color: #ffc107;
+    color: #fbbf24;
 }
 
 .registration-call-to-action p {
-    font-size: 16px;
-    margin-bottom: 25px;
-    opacity: 0.9;
+    font-size: 1.1rem;
+    margin-bottom: 30px;
+    opacity: 0.95;
 }
 
-.registration-call-to-action .btn {
-    padding: 12px 30px;
-    font-size: 16px;
-    font-weight: 600;
-    border-radius: 25px;
-    transition: all 0.3s ease;
-    border: 2px solid white;
-    background: white;
-    color: #007bff;
+.register-btn {
+    padding: 15px 40px !important;
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    border-radius: 50px !important;
+    transition: all 0.3s ease !important;
+    border: 3px solid white !important;
+    background: white !important;
+    color: #1e3a8a !important;
 }
 
-.registration-call-to-action .btn:hover {
-    background: transparent;
-    color: white;
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+.register-btn:hover {
+    background: transparent !important;
+    color: white !important;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.3);
 }
 
 /* Modal Styling */
 .modal-header {
-    background: #007bff;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
     color: white;
     border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    padding: 25px 30px;
 }
 
 .modal-header .modal-title {
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 1.3rem;
 }
 
 .modal-header .modal-title i {
-    color: #ffc107;
-    margin-right: 8px;
+    color: #fbbf24;
+    margin-right: 10px;
 }
 
 .modal-header .close {
     color: white;
-    opacity: 0.8;
+    opacity: 0.9;
+    text-shadow: none;
+    font-size: 2rem;
 }
 
 .modal-header .close:hover {
@@ -336,75 +383,181 @@
 }
 
 .modal-body {
-    padding: 30px;
+    padding: 35px;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
 }
 
 .form-label {
     font-weight: 600;
-    color: #333;
-    margin-bottom: 8px;
+    color: #1e3a8a;
+    margin-bottom: 10px;
+    font-size: 0.95rem;
 }
 
 .form-control {
-    border-radius: 5px;
-    border: 2px solid #e9ecef;
-    padding: 10px 15px;
-    transition: border-color 0.3s ease;
+    border-radius: 8px;
+    border: 2px solid #e5e7eb;
+    padding: 12px 18px;
+    transition: all 0.3s ease;
+    font-size: 1rem;
 }
 
 .form-control:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-.btn-block {
-    padding: 12px;
-    font-weight: 600;
-    border-radius: 5px;
+.submit-registration-btn {
+    padding: 14px !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6) !important;
+    border: none !important;
+    font-size: 1.05rem !important;
+    transition: all 0.3s ease !important;
+}
+
+.submit-registration-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(30, 58, 138, 0.3);
 }
 
 .modal-footer {
-    border-top: 1px solid #e9ecef;
+    border-top: 1px solid #e5e7eb;
     padding: 20px 30px;
 }
 
+.modal-footer .btn-secondary {
+    background: #6b7280;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.modal-footer .btn-secondary:hover {
+    background: #4b5563;
+}
+
+/* Form validation styling */
+.is-invalid {
+    border-color: #ef4444 !important;
+}
+
+.invalid-feedback {
+    display: block;
+    width: 100%;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: #ef4444;
+    font-weight: 500;
+}
+
+.alert {
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+}
+
+.alert-danger {
+    color: #991b1b;
+    background-color: #fee2e2;
+    border-color: #fecaca;
+}
+
+.alert-success {
+    color: #065f46;
+    background-color: #d1fae5;
+    border-color: #a7f3d0;
+}
+
+.alert ul {
+    padding-left: 1.2rem;
+    margin-bottom: 0;
+}
+
+.alert li {
+    margin-bottom: 0.25rem;
+}
+
 @media (max-width: 768px) {
-    .event-details-section .event-detail-item p {
+    .posttitle {
+        font-size: 1.8rem;
+    }
+    
+    .event-details-section {
+        padding: 25px;
+    }
+    
+    .event-details-section h3 {
+        font-size: 1.3rem;
+    }
+    
+    .event-detail-item p {
         margin-left: 0;
         margin-top: 5px;
     }
     
-    .event-details-section .event-detail-item h5 {
+    .event-detail-item h5 {
         flex-direction: column;
         align-items: flex-start;
         gap: 5px;
     }
     
     .event-registration-section {
-        padding: 20px;
-        margin: 20px 0;
+        padding: 30px 20px;
+        margin: 30px 0;
     }
     
     .registration-call-to-action h4 {
-        font-size: 20px;
+        font-size: 1.4rem;
     }
     
-    .registration-call-to-action .btn {
-        padding: 10px 25px;
-        font-size: 14px;
+    .register-btn {
+        padding: 12px 30px !important;
+        font-size: 1rem !important;
     }
     
     .modal-body {
-        padding: 20px;
+        padding: 25px;
     }
     
     .modal-footer {
-        padding: 15px 20px;
+        padding: 15px 25px;
+    }
+    
+    .article-post {
+        padding: 25px;
+    }
+    
+    .article-post h3 {
+        font-size: 1.3rem;
+    }
+    
+    .article-post p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .posttitle {
+        font-size: 1.5rem;
+    }
+    
+    .post-featured-image {
+        max-height: 300px;
+    }
+    
+    .event-details-section {
+        padding: 20px;
+    }
+    
+    .article-post {
+        padding: 20px;
     }
 }
 </style>
-

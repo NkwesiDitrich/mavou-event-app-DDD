@@ -3,5 +3,6 @@
     @include('frontend.components.home.site-title')
     @include('frontend.components.home.feature')
     @include('frontend.components.home.recent')
+    @include('frontend.components.home.search')
     @include('frontend.components.home.footer')
 @endsection

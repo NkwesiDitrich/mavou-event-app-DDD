@@ -7,30 +7,18 @@
     <div class="container">
         <!-- Begin Logo -->
         <a class="navbar-brand" href="{{ url('/') }}">
-        <img src="{{ asset('frontend/img/logo.png') }}" alt="logo">
+        <span class="brand-logo">M</span>
+        <span class="brand-text">Mavou Consulting</span>
         </a>
         <!-- End Logo -->
         <div class="collapse navbar-collapse" id="navbarsExampleDefault">
             <!-- Begin Menu -->
             <ul class="navbar-nav ml-auto">
                 <li class="nav-item active">
-                <a class="nav-link" href="{{ url('/') }}">Stories <span class="sr-only">(current)</span></a>
+                <a class="nav-link" href="{{ url('/') }}">Events <span class="sr-only">(current)</span></a>
                 </li>
-                {{-- <li class="nav-item">
-                <a class="nav-link" href="post.html">Post</a>
-                </li>
-                <li class="nav-item">
-                <a class="nav-link" href="author.html">Author</a>
-                </li> --}}
-                {{-- REMOVED: Admin option as requested --}}
             </ul>
             <!-- End Menu -->
-            <!-- Begin Search -->
-            <form class="form-inline my-2 my-lg-0">
-                <input class="form-control mr-sm-2" type="text" placeholder="Search">
-                <span class="search-icon"><svg class="svgIcon-use" width="25" height="25" viewbox="0 0 25 25"><path d="M20.067 18.933l-4.157-4.157a6 6 0 1 0-.884.884l4.157 4.157a.624.624 0 1 0 .884-.884zM6.5 11c0-2.62 2.13-4.75 4.75-4.75S16 8.38 16 11s-2.13 4.75-4.75 4.75S6.5 13.62 6.5 11z"></path></svg></span>
-            </form>
-            <!-- End Search -->
         </div>
     </div>
     </nav>
@@ -57,6 +45,45 @@
         </div>
     </div>
 </div>
+
+<style>
+.navbar-brand {
+    display: flex;
+    align-items: center;
+    font-weight: 600;
+    font-size: 1.3rem;
+}
+
+.brand-logo {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-right: 10px;
+    box-shadow: 0 2px 8px rgba(30, 58, 138, 0.3);
+}
+
+.brand-text {
+    color: #1e3a8a;
+    font-weight: 600;
+}
+
+.navbar-nav .nav-link {
+    color: #1e3a8a !important;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #3b82f6 !important;
+}
+</style>
 
 <script>
 function showPasswordModal() {
@@ -87,18 +114,23 @@ function checkPassword() {
 
 // Allow Enter key to submit password
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('adminPassword').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            checkPassword();
-        }
-    });
+    const passwordInput = document.getElementById('adminPassword');
+    if (passwordInput) {
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+    }
 });
 
 // Close modal when clicking outside
-document.getElementById('passwordModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        hidePasswordModal();
-    }
-});
+const modal = document.getElementById('passwordModal');
+if (modal) {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            hidePasswordModal();
+        }
+    });
+}
 </script>
-

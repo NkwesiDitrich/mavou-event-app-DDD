@@ -1,0 +1,242 @@
+/* Enhanced Home Page Styles with Royal Blue Theme */
+
+/* Global Enhancements */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f8fafc;
+}
+
+/* Container Enhancements */
+.container {
+    max-width: 1200px;
+}
+
+/* Section Title Enhancements */
+.section-title {
+    margin-top: 50px;
+    margin-bottom: 40px;
+}
+
+.section-title h2 {
+    color: #1e3a8a;
+    font-size: 2rem;
+    font-weight: 700;
+    border-bottom: 3px solid #3b82f6;
+    padding-bottom: 15px;
+    position: relative;
+}
+
+.section-title h2 span {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    border-bottom: 3px solid #3b82f6;
+    padding-bottom: 15px;
+}
+
+/* Featured Events Grid */
+.featured-posts {
+    padding: 40px 0;
+    background: white;
+    margin-bottom: 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+}
+
+.featured-events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+
+/* Recent Events Grid */
+.recent-posts {
+    padding: 40px 0;
+    background: white;
+    margin-bottom: 30px;
+    border-radius: 15px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.05);
+}
+
+.events-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 30px;
+    padding: 20px;
+}
+
+/* Event Card Enhancements - DO NOT CHANGE CARD STRUCTURE */
+.event-card-container {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.event-card-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(30, 58, 138, 0.15);
+}
+
+/* Link Color Enhancements */
+a {
+    color: #3b82f6;
+    transition: all 0.3s ease;
+}
+
+a:hover {
+    color: #1e3a8a;
+    text-decoration: none;
+}
+
+/* Event Card Title Links */
+.event-card-title a {
+    color: #1e3a8a;
+}
+
+.event-card-title a:hover {
+    color: #3b82f6;
+}
+
+/* Event Card Read More Button */
+.event-card-read-more {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white !important;
+    padding: 10px 20px;
+    border-radius: 25px;
+    display: inline-block;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+}
+
+.event-card-read-more:hover {
+    background: linear-gradient(135deg, #3b82f6, #1e3a8a);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+    color: white !important;
+}
+
+/* Icon Colors */
+.event-info-item i {
+    color: #3b82f6;
+}
+
+/* Footer Enhancements */
+.footer {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white;
+    padding: 30px 0;
+    margin-top: 60px;
+    border-top: none;
+}
+
+.footer p {
+    color: rgba(255, 255, 255, 0.9);
+    margin: 0;
+}
+
+.footer a {
+    color: white;
+    font-weight: 600;
+}
+
+.footer a:hover {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Navigation Enhancements */
+.mediumnavigation {
+    box-shadow: 0 2px 15px rgba(30, 58, 138, 0.1);
+    border-bottom: 2px solid #3b82f6;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .featured-events-grid,
+    .events-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 10px;
+    }
+    
+    .section-title h2 {
+        font-size: 1.5rem;
+    }
+    
+    .featured-posts,
+    .recent-posts {
+        padding: 20px 0;
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-title h2 {
+        font-size: 1.3rem;
+    }
+}
+
+/* Loading Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.event-card-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Empty State */
+.no-results-message {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+}
+
+.no-results-message i {
+    font-size: 4rem;
+    color: #3b82f6;
+    margin-bottom: 20px;
+}
+
+.no-results-message h3 {
+    color: #1e3a8a;
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+.no-results-message p {
+    font-size: 1rem;
+    color: #6b7280;
+}
+
+/* Smooth Scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Focus States for Accessibility */
+button:focus,
+input:focus,
+select:focus,
+a:focus {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+    .hero-section,
+    .search-section,
+    .mediumnavigation,
+    .footer {
+        display: none;
+    }
+}
