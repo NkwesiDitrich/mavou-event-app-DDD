@@ -1,0 +1,127 @@
+/* Enhanced Home Page Styles - See More Button and Improvements */
+
+/* See More Button Container */
+.see-more-container {
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 40px;
+    padding: 20px 0;
+}
+
+/* See More Button Styling */
+.btn-see-more {
+    display: inline-block;
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #00ab6b, #008a56);
+    color: white;
+    text-decoration: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 171, 107, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-see-more::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.btn-see-more:hover::before {
+    left: 100%;
+}
+
+.btn-see-more:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 171, 107, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-see-more:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(0, 171, 107, 0.3);
+}
+
+.btn-see-more i {
+    transition: transform 0.3s ease;
+}
+
+.btn-see-more:hover i {
+    transform: translateX(5px);
+}
+
+/* Recent Posts Section Enhancement */
+.recent-posts {
+    margin-bottom: 40px;
+}
+
+.recent-posts .section-title {
+    margin-bottom: 30px;
+}
+
+/* Responsive Design for See More Button */
+@media (max-width: 768px) {
+    .see-more-container {
+        margin-top: 20px;
+        margin-bottom: 30px;
+        padding: 15px 0;
+    }
+    
+    .btn-see-more {
+        padding: 10px 25px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .see-more-container {
+        margin-top: 15px;
+        margin-bottom: 20px;
+        padding: 10px 0;
+    }
+    
+    .btn-see-more {
+        padding: 10px 20px;
+        font-size: 14px;
+        width: 90%;
+        max-width: 280px;
+    }
+}
+
+/* Animation for button appearance */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.see-more-container {
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Focus state for accessibility */
+.btn-see-more:focus {
+    outline: 3px solid rgba(0, 171, 107, 0.5);
+    outline-offset: 3px;
+}
+
+/* Print styles */
+@media print {
+    .see-more-container {
+        display: none;
+    }
+}

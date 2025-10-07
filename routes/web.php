@@ -14,6 +14,10 @@ Route::post('/check-email-availability',[HomeController::class,'checkEmailAvaila
 
 Route::post('/event-registration',[HomeController::class,'EventRegistration']);
 
+// All Events Page Routes
+Route::get('/events/all', [App\Http\Controllers\AllEventsController::class, 'index'])->name('events.all');
+Route::get('/api/events/all', [App\Http\Controllers\AllEventsController::class, 'getEvents'])->name('api.events.all');
+
 // Enhanced Dashboard Routes
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [App\Http\Controllers\EnhancedDashboardController::class, 'enhancedDashboard'])->name('dashboard');

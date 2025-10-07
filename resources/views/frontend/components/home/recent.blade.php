@@ -52,10 +52,14 @@
            
         </div>
         
-        {{-- Note: Pagination may need adjustment for DDD entities --}}
-        {{-- {{ $recentEvents->links()  }} --}}
-       
+        <!-- See More Button -->
+        <div class="see-more-container" style="text-align: center; margin-top: 30px; margin-bottom: 40px;">
+            <a href="{{ url('/events/all') }}" class="btn-see-more">
+                <span>See More Events</span>
+                <i class="fa fa-arrow-right" style="margin-left: 8px;"></i>
+            </a>
+        </div>
+        
         </section>
         <!-- End List Posts
         ================================================== -->
-
