@@ -34,6 +34,17 @@
                         </select>
                     </div>
                     <div class="filter-item">
+                        <select id="dateRangeFilter" class="filter-select">
+                            <option value="">All Dates</option>
+                            <option value="today">Today</option>
+                            <option value="tomorrow">Tomorrow</option>
+                            <option value="this_week">This Week</option>
+                            <option value="this_weekend">This Weekend</option>
+                            <option value="this_month">This Month</option>
+                            <option value="next_month">Next Month</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
                         <button id="clearFilters" class="btn-clear-filters">
                             <i class="fa fa-times"></i> Clear Filters
                         </button>
@@ -209,22 +220,23 @@
         }
     </style>
     
-    <!-- JavaScript for Infinite Scroll and Filtering -->
+    <!-- JavaScript for Infinite Scroll and Filtering with Persistence -->
     <script>
         (function() {
             let currentPage = 1;
             let isLoading = false;
             let hasMoreEvents = true;
             let debounceTimer = null;
-            const DEBOUNCE_DELAY = 500; // 500ms debounce
-            const EVENTS_PER_PAGE = 12; // Initial load
-            const SCROLL_BATCH_SIZE = 10; // Per scroll batch
+            const DEBOUNCE_DELAY = 500;
+            const EVENTS_PER_PAGE = 12;
+            const SCROLL_BATCH_SIZE = 10;
             
             // Get filter elements
             const searchInput = document.getElementById('searchInput');
             const categoryFilter = document.getElementById('categoryFilter');
             const locationFilter = document.getElementById('locationFilter');
             const typeFilter = document.getElementById('typeFilter');
+            const dateRangeFilter = document.getElementById('dateRangeFilter');
             const clearFiltersBtn = document.getElementById('clearFilters');
             const eventsGrid = document.getElementById('eventsGrid');
             const loadingIndicator = document.getElementById('loadingIndicator');
@@ -232,6 +244,53 @@
             const loadMoreTrigger = document.getElementById('loadMoreTrigger');
             const loadMoreBtn = document.getElementById('loadMoreBtn');
             const loadMoreContainer = document.getElementById('loadMoreContainer');
+            
+            // Filter state management
+            const STORAGE_KEY = 'eventFilters';
+            
+            // Load saved filters from sessionStorage
+            function loadSavedFilters() {
+                try {
+                    const savedFilters = sessionStorage.getItem(STORAGE_KEY);
+                    if (savedFilters) {
+                        const filters = JSON.parse(savedFilters);
+                        searchInput.value = filters.search || '';
+                        categoryFilter.value = filters.category || '';
+                        locationFilter.value = filters.location || '';
+                        typeFilter.value = filters.type || '';
+                        dateRangeFilter.value = filters.dateRange || '';
+                        return true;
+                    }
+                } catch (e) {
+                    console.error('Error loading saved filters:', e);
+                }
+                return false;
+            }
+            
+            // Save filters to sessionStorage
+            function saveFilters() {
+                try {
+                    const filters = {
+                        search: searchInput.value.trim(),
+                        category: categoryFilter.value,
+                        location: locationFilter.value.trim(),
+                        type: typeFilter.value,
+                        dateRange: dateRangeFilter.value
+                    };
+                    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(filters));
+                } catch (e) {
+                    console.error('Error saving filters:', e);
+                }
+            }
+            
+            // Clear saved filters
+            function clearSavedFilters() {
+                try {
+                    sessionStorage.removeItem(STORAGE_KEY);
+                } catch (e) {
+                    console.error('Error clearing saved filters:', e);
+                }
+            }
             
             // Load events function
             function loadEvents(reset = false) {
@@ -247,13 +306,17 @@
                     eventsGrid.innerHTML = '';
                 }
                 
+                // Save current filters
+                saveFilters();
+                
                 const params = new URLSearchParams({
                     page: currentPage,
                     per_page: currentPage === 1 ? EVENTS_PER_PAGE : SCROLL_BATCH_SIZE,
                     search: searchInput.value.trim(),
                     category: categoryFilter.value,
                     location: locationFilter.value.trim(),
-                    type: typeFilter.value
+                    type: typeFilter.value,
+                    date_range: dateRangeFilter.value
                 });
                 
                 fetch(`{{ url('/api/events/all') }}?${params.toString()}`)
@@ -362,6 +425,7 @@
             categoryFilter.addEventListener('change', debouncedFilter);
             locationFilter.addEventListener('input', debouncedFilter);
             typeFilter.addEventListener('change', debouncedFilter);
+            dateRangeFilter.addEventListener('change', debouncedFilter);
             
             // Clear filters
             clearFiltersBtn.addEventListener('click', function() {
@@ -369,6 +433,8 @@
                 categoryFilter.value = '';
                 locationFilter.value = '';
                 typeFilter.value = '';
+                dateRangeFilter.value = '';
+                clearSavedFilters();
                 loadEvents(true);
             });
             
@@ -390,7 +456,8 @@
                 loadEvents();
             });
             
-            // Initial load
+            // Load saved filters and initial events
+            const hadSavedFilters = loadSavedFilters();
             loadEvents();
         })();
     </script>

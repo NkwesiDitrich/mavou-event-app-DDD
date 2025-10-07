@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Infrastructure\Persistence\EloquentEventRepository;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class AllEventsController extends Controller
 {
@@ -52,6 +53,7 @@ class AllEventsController extends Controller
             $categoryId = $request->input('category', '');
             $location = $request->input('location', '');
             $type = $request->input('type', '');
+            $dateRange = $request->input('date_range', '');
 
             // Validate pagination parameters
             if ($page < 1) $page = 1;
@@ -84,6 +86,14 @@ class AllEventsController extends Controller
             // Apply type filter
             if (!empty($type)) {
                 $query->where('type', $type);
+            }
+
+            // Apply date range filter
+            if (!empty($dateRange)) {
+                $dateFilter = $this->getDateRangeFilter($dateRange);
+                if ($dateFilter) {
+                    $query->whereBetween('date', [$dateFilter['start'], $dateFilter['end']]);
+                }
             }
 
             // Get total count for pagination
@@ -123,6 +133,7 @@ class AllEventsController extends Controller
                     'teaser' => $event->teaser ?? null,
                     'description' => $event->description,
                     'date' => $date,
+                    'raw_date' => $event->date,
                     'time' => $event->time ?? 'Time TBA',
                     'location' => $event->location,
                     'type' => $event->type,
@@ -156,6 +167,69 @@ class AllEventsController extends Controller
                 'has_more' => false,
                 'total' => 0
             ], 500);
+        }
+    }
+
+    /**
+     * Get date range filter based on the selected option
+     * 
+     * @param string $dateRange
+     * @return array|null
+     */
+    private function getDateRangeFilter(string $dateRange): ?array
+    {
+        $now = Carbon::now();
+        
+        switch ($dateRange) {
+            case 'today':
+                return [
+                    'start' => $now->copy()->startOfDay()->format('Y-m-d'),
+                    'end' => $now->copy()->endOfDay()->format('Y-m-d')
+                ];
+            
+            case 'tomorrow':
+                $tomorrow = $now->copy()->addDay();
+                return [
+                    'start' => $tomorrow->startOfDay()->format('Y-m-d'),
+                    'end' => $tomorrow->endOfDay()->format('Y-m-d')
+                ];
+            
+            case 'this_week':
+                return [
+                    'start' => $now->copy()->startOfWeek()->format('Y-m-d'),
+                    'end' => $now->copy()->endOfWeek()->format('Y-m-d')
+                ];
+            
+            case 'this_weekend':
+                $saturday = $now->copy()->next(Carbon::SATURDAY);
+                $sunday = $now->copy()->next(Carbon::SUNDAY);
+                
+                // If today is already weekend, use this weekend
+                if ($now->isSaturday() || $now->isSunday()) {
+                    $saturday = $now->isSaturday() ? $now->copy() : $now->copy()->previous(Carbon::SATURDAY);
+                    $sunday = $now->isSunday() ? $now->copy() : $now->copy()->next(Carbon::SUNDAY);
+                }
+                
+                return [
+                    'start' => $saturday->startOfDay()->format('Y-m-d'),
+                    'end' => $sunday->endOfDay()->format('Y-m-d')
+                ];
+            
+            case 'this_month':
+                return [
+                    'start' => $now->copy()->startOfMonth()->format('Y-m-d'),
+                    'end' => $now->copy()->endOfMonth()->format('Y-m-d')
+                ];
+            
+            case 'next_month':
+                $nextMonth = $now->copy()->addMonth();
+                return [
+                    'start' => $nextMonth->startOfMonth()->format('Y-m-d'),
+                    'end' => $nextMonth->endOfMonth()->format('Y-m-d')
+                ];
+            
+            default:
+                return null;
         }
     }
 }
